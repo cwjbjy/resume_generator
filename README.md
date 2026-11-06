@@ -43,7 +43,7 @@ npm run dev
 - 免费体验账号为 `user01 / 123456`，会员体验账号为 `vip01 / 123456`，仅 dev 环境自动创建。MySQL 数据保存在 Docker 命名数据卷 `mysql-data` 中。
 - Linux/macOS 使用 `sh mvnw` 替代 `mvnw.cmd`。Wrapper 首次运行需要联网下载 Maven。
 
-首次切换会初始化 MySQL 数据库，历史 H2 文件中的账号、简历、订单需要单独迁移。日常停止数据库使用以下命令，后续启动会继续使用原有数据卷。
+MySQL 首次启动时由 Flyway 自动初始化。日常停止数据库使用以下命令，后续启动会继续使用原有数据卷。
 
 ```powershell
 docker compose -f compose.yml -f compose.dev.yml stop mysql redis

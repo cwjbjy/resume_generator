@@ -6,7 +6,7 @@ import type { Resume, Template } from '../../../types';
 
 interface ResumeCardProps {
   resume: Resume;
-  template: Template;
+  template?: Template;
   busy: boolean;
   onRename: () => void;
   onDuplicate: () => void;
@@ -26,7 +26,7 @@ export function ResumeCard({
     <article className="my-resume-card">
       <button className="my-resume-cover" onClick={edit} aria-label={`编辑${resume.title}`}>
         <div className="mini-resume">
-          <ResumePreview content={resume.content} template={template} />
+          {template && <ResumePreview content={resume.content} template={template} />}
         </div>
       </button>
       <div className="my-resume-info">

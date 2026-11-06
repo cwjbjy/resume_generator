@@ -1,12 +1,11 @@
 package cn.resumecraft.model;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 @TableName("plans")
 public class Plan {
-  @TableId(type = IdType.INPUT)
+  @TableId
   public Long id;
 
   public String name;

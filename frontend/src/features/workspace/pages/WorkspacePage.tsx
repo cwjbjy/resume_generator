@@ -7,7 +7,6 @@ import { refreshUser } from '../../../api/userApi';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { ErrorBox } from '../../../components/ui/ErrorBox';
 import { Loading } from '../../../components/ui/Loading';
-import { templates as initialTemplates } from '../../../data/templateCatalog';
 import { api } from '../../../lib/http';
 import { notify } from '../../../stores/noticeStore';
 import { useSession } from '../../../stores/sessionStore';
@@ -36,7 +35,7 @@ export function WorkspacePage() {
   const [editingProfile, setEditingProfile] = useState(false);
   const [busy, setBusy] = useState(false);
   const { resumes, orders, exports, templates, config } = useWorkspaceData(tab);
-  const catalog = templates.data || initialTemplates;
+  const catalog = templates.data ?? [];
 
   async function run(action: () => Promise<unknown>, message: string) {
     setBusy(true);
@@ -95,7 +94,7 @@ export function WorkspacePage() {
           </div>
           {tab === 'resumes' && (
             <>
-              {resumes.isLoading && <Loading />}
+              {(resumes.isLoading || templates.isPending) && <Loading />}
               {resumes.error && (
                 <ErrorBox error={resumes.error} retry={() => void resumes.refetch()} />
               )}
@@ -104,9 +103,7 @@ export function WorkspacePage() {
                   <ResumeCard
                     key={resume.id}
                     resume={resume}
-                    template={
-                      catalog.find((template) => template.id === resume.templateId) || catalog[0]
-                    }
+                    template={catalog.find((template) => template.id === resume.templateId)}
                     busy={busy}
                     onRename={() => setRenaming(resume)}
                     onRemove={() => setRemoving(resume)}

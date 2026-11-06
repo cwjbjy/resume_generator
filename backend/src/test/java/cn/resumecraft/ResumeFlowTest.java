@@ -16,22 +16,22 @@ class ResumeFlowTest extends ApiTestSupport {
   @Test
   void resumesArePrivateAndVipIsCheckedOnServer() throws Exception {
     Account owner = account(), other = account();
-    JsonNode r = resume(owner, 1);
+    JsonNode r = resume(owner, freeTemplateId());
     long id = r.path("id").asLong();
     for (String method : List.of("GET", "DELETE"))
       call(method, "/api/resumes/" + id, other, null, 403);
     call("POST", "/api/resumes/" + id + "/duplicate", other, null, 403);
     call("PUT", "/api/resumes/" + id, other, saveBody(r), 403);
-    call("POST", "/api/resumes", owner, Map.of("templateId", 3), 403);
+    call("POST", "/api/resumes", owner, Map.of("templateId", vipTemplateId()), 403);
     ObjectNode body = saveBody(r);
-    body.put("templateId", 4);
+    body.put("templateId", vipTemplateId());
     call("PUT", "/api/resumes/" + id, owner, body, 403);
   }
 
   @Test
   void optimisticVersionPreventsOverwriteAndContentIsValidated() throws Exception {
     Account a = account();
-    JsonNode r = resume(a, 1);
+    JsonNode r = resume(a, freeTemplateId());
     String path = "/api/resumes/" + r.path("id").asLong();
     ObjectNode body = saveBody(r);
     body.put("title", "更新后的标题");
@@ -50,10 +50,10 @@ class ResumeFlowTest extends ApiTestSupport {
   @Test
   void expiredMemberMustSwitchToFreeTemplate() throws Exception {
     Account a = account();
-    Order o = order(a, 1);
+    Order o = order(a, planId(30));
     var c = callback(o);
     payments.callback(c, signatureService.sign(c));
-    JsonNode r = resume(a, 3);
+    JsonNode r = resume(a, vipTemplateId());
     users.update(
         null,
         new UpdateWrapper<User>()
@@ -61,7 +61,7 @@ class ResumeFlowTest extends ApiTestSupport {
             .set("member_expire_at", LocalDateTime.now().minusDays(1)));
     call("POST", "/api/exports", a, Map.of("resumeId", r.path("id").asLong()), 403);
     ObjectNode body = saveBody(r);
-    body.put("templateId", 1);
+    body.put("templateId", freeTemplateId());
     call("PUT", "/api/resumes/" + r.path("id").asLong(), a, body, 200);
   }
 }

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
 import { ErrorBox } from '../../../components/ui/ErrorBox';
-import { templates as initialTemplates } from '../../../data/templateCatalog';
+import { Loading } from '../../../components/ui/Loading';
 import { useSession } from '../../../stores/sessionStore';
 import { MembershipBanner } from '../components/MembershipBanner';
 import { TemplateCard } from '../components/TemplateCard';
@@ -14,7 +14,7 @@ import { useCreateResume } from '../hooks/useCreateResume';
 import { useTemplates } from '../hooks/useTemplates';
 
 export function TemplatesPage() {
-  const { data, error, refetch } = useTemplates();
+  const { data, error, isPending: templatesPending, refetch } = useTemplates();
   const { createResume, isPending } = useCreateResume();
   const user = useSession((state) => state.user);
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ export function TemplatesPage() {
   const [search, setSearch] = useState('');
   const [params, setParams] = useSearchParams();
   const handledTemplate = useRef(false);
-  const templates = data || initialTemplates;
+  const templates = data ?? [];
   const visible = templates.filter(
     (template) =>
       (filter === 'all' || (filter === 'vip' ? template.isVip : !template.isVip)) &&
@@ -66,6 +66,7 @@ export function TemplatesPage() {
               onSearchChange={setSearch}
             />
             {error && <ErrorBox error={error} retry={() => void refetch()} />}
+            {templatesPending && <Loading />}
             <div className="template-grid">
               {visible.map((template) => (
                 <TemplateCard
@@ -77,7 +78,7 @@ export function TemplatesPage() {
                 />
               ))}
             </div>
-            {!visible.length && (
+            {!templatesPending && !visible.length && (
               <div className="empty-state">
                 <Search size={30} />
                 <h3>暂时没有匹配的模板</h3>

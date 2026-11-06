@@ -1,7 +1,18 @@
 import { CheckCircle2 } from 'lucide-react';
 import { ResumePreview } from '../../../components/resume/ResumePreview';
 import { sample } from '../../../data/sampleResume';
-import { templates as initialTemplates } from '../../../data/templateCatalog';
+import type { Template } from '../../../types';
+
+// 登录页插画使用固定的示例样式，不参与真实模板目录
+const storyTemplate: Template = {
+  id: 0,
+  name: '示例简历',
+  category: '通用',
+  isVip: false,
+  color: '#3568d4',
+  style: 'modern',
+  usedCount: 0,
+};
 
 export function AuthStory() {
   return (
@@ -15,7 +26,7 @@ export function AuthStory() {
       <p>整理每一段成长，认真书写新的可能。</p>
       <div className="auth-illustration">
         <div className="auth-resume">
-          <ResumePreview content={sample} template={initialTemplates[0]} />
+          <ResumePreview content={sample} template={storyTemplate} />
         </div>
         <div className="auth-success">
           <CheckCircle2 size={23} />

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { templates as initialTemplates } from '../../../data/templateCatalog';
+import { ErrorBox } from '../../../components/ui/ErrorBox';
+import { Loading } from '../../../components/ui/Loading';
 import { notify } from '../../../stores/noticeStore';
 import { useSession } from '../../../stores/sessionStore';
 import type { Resume, Template } from '../../../types';
@@ -19,13 +20,18 @@ import { TemplateSwitchDialog } from './TemplateSwitchDialog';
 export function ResumeEditor({ initialResume }: { initialResume: Resume }) {
   const user = useSession((state) => state.user)!;
   const navigate = useNavigate();
-  const { data: templateData } = useTemplates();
-  const templates = templateData || initialTemplates;
+  const {
+    data: templateData,
+    error: templateError,
+    isPending: templatesPending,
+    refetch: refetchTemplates,
+  } = useTemplates();
+  const templates = templateData ?? [];
   const draft = useResumeDraft(initialResume, user.id);
   const pdf = usePdfExport(draft.save, templates, user.member);
   const [module, setModule] = useState<EditorModule>('basic');
   const [switchingTemplate, setSwitchingTemplate] = useState(false);
-  const template = templates.find((item) => item.id === draft.resume.templateId) || templates[0];
+  const template = templates.find((item) => item.id === draft.resume.templateId);
 
   async function save(goBack = false) {
     try {
@@ -43,6 +49,24 @@ export function ResumeEditor({ initialResume }: { initialResume: Resume }) {
     }
     draft.change({ ...draft.resume, templateId: nextTemplate.id });
     setSwitchingTemplate(false);
+  }
+
+  if (templatesPending) {
+    return (
+      <main className="editor-page">
+        <Loading />
+      </main>
+    );
+  }
+  if (!template) {
+    return (
+      <main className="editor-page">
+        <ErrorBox
+          error={templateError ?? new Error('这份简历使用的模板已不存在')}
+          retry={() => void refetchTemplates()}
+        />
+      </main>
+    );
   }
 
   return (
