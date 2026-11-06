@@ -7,6 +7,16 @@ function New-LocalSecret {
     try { $rng.GetBytes($bytes) } finally { $rng.Dispose() }
     return [Convert]::ToBase64String($bytes)
 }
-$lines = @('APP_PROFILE=dev', "DB_PASSWORD=$(New-LocalSecret)", "MYSQL_ROOT_PASSWORD=$(New-LocalSecret)", "REDIS_PASSWORD=$(New-LocalSecret)", "JWT_SECRET=$(New-LocalSecret)", "PAYMENT_SECRET=$(New-LocalSecret)")
+$lines = @(
+    'APP_PROFILE=dev'
+    'DB_PORT=3306'
+    'REDIS_PORT=6379'
+    "DB_PASSWORD=$(New-LocalSecret)"
+    "MYSQL_ROOT_PASSWORD=$(New-LocalSecret)"
+    "REDIS_PASSWORD=$(New-LocalSecret)"
+    "JWT_SECRET=$(New-LocalSecret)"
+    "PAYMENT_SECRET=$(New-LocalSecret)"
+)
 $lines | Set-Content -LiteralPath $envFile -Encoding ascii
-Write-Host 'Created .env with random local secrets. Run: docker compose up --build -d'
+Write-Host 'Created .env with random local secrets.'
+Write-Host 'Start dev databases: docker compose -f compose.yml -f compose.dev.yml up -d --wait mysql redis'

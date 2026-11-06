@@ -2,24 +2,34 @@
 
 基于当前目录的原型和 M1 设计文档实现的前后端分离项目。游客浏览模板，登录后创建、编辑并导出简历，通过模拟支付开通会员。品牌、模板和界面为本项目原创，没有复制第三方站点代码或素材。
 
-## 本地启动（不需要 Docker）
+## 本地开发（Docker MySQL + Redis）
 
-需要 Node.js 20.19+ / 22、JDK 21。后端默认 `dev` 模式使用 H2 文件数据库，首次启动自动迁移并生成体验账号，无需安装 MySQL、Redis。
+需要 Docker Desktop（Linux 容器）、Node.js 20.19+ / 22、JDK 21。`dev` 和 `prod` 均使用 MySQL 8.0、Redis 7 及同一套 MySQL Flyway 迁移。开发时在 Docker 中运行数据库，在本机运行 Java 和 Vite。
 
-**终端一：后端**
+先启动 Docker Desktop，然后在项目根目录初始化配置并启动数据库。
+
+```powershell
+cd D:\cwj\resume_generator
+.\init-env.ps1
+docker compose -f compose.yml -f compose.dev.yml up -d --wait mysql redis
+```
+
+`init-env.ps1` 仅在 `.env` 不存在时生成随机密钥。后端从项目根目录或 `backend` 目录启动时，会自动读取根目录 `.env`。开发覆盖文件将 MySQL、Redis 分别绑定到 `127.0.0.1:3306` 和 `127.0.0.1:6379`。端口冲突时，在 `.env` 中调整 `DB_PORT`、`REDIS_PORT`，然后重新执行上述启动命令。
+
+**终端一启动后端**
 
 ```powershell
 cd D:\cwj\resume_generator\backend
 .\mvnw.cmd spring-boot:run
 ```
 
-如果目前只有 JDK 17，可以使用兼容模式（本机已验证）：
+如果目前只有 JDK 17，可以使用兼容模式。
 
 ```powershell
 .\mvnw.cmd '-Djava.version=17' spring-boot:run
 ```
 
-**终端二：前端**
+**终端二启动前端**
 
 ```powershell
 cd D:\cwj\resume_generator\frontend
@@ -30,8 +40,14 @@ npm run dev
 - 前端：<http://127.0.0.1:5173>
 - 健康检查：<http://127.0.0.1:8080/actuator/health>
 - 开发接口文档：<http://127.0.0.1:8080/swagger-ui/index.html>，Knife4j：<http://127.0.0.1:8080/doc.html>
-- 免费体验：`user01 / 123456`；会员体验：`vip01 / 123456`。仅 dev 环境自动创建，数据保存在 `backend/data/`。
+- 免费体验账号为 `user01 / 123456`，会员体验账号为 `vip01 / 123456`，仅 dev 环境自动创建。MySQL 数据保存在 Docker 命名数据卷 `mysql-data` 中。
 - Linux/macOS 使用 `sh mvnw` 替代 `mvnw.cmd`。Wrapper 首次运行需要联网下载 Maven。
+
+首次切换会初始化 MySQL 数据库，历史 H2 文件中的账号、简历、订单需要单独迁移。日常停止数据库使用以下命令，后续启动会继续使用原有数据卷。
+
+```powershell
+docker compose -f compose.yml -f compose.dev.yml stop mysql redis
+```
 
 ## 已实现
 
@@ -85,10 +101,12 @@ backend/                        Spring Boot API
     mapper/                     MyBatis-Plus Mapper
     security/                   JWT 签发、认证过滤器和认证异常响应
     config/                     安全链与开发账号配置
-  src/main/resources/db/migration/{mysql,h2}/
+  src/main/resources/db/migration/mysql/
+  src/test/resources/            测试配置
   src/test/                     按认证、简历、支付、导出拆分的 11 项集成测试
 docs/                           演示步骤、验收记录、截图
 compose.yml                     MySQL + Redis + 后端 + 前端/Nginx
+compose.dev.yml                 本地开发的 MySQL、Redis 端口映射
 resume-maker.html               用户原始静态原型（保留）
 resume-maker-m1-design.md        用户原始设计文档（保留）
 ```
@@ -121,7 +139,7 @@ GitHub Actions 执行上述前端检查、PDF 回归和后端验证。
 flowchart LR
   U[浏览器 React] -->|同源 /api，JWT| N[Vite 代理 / Nginx]
   N --> B[Spring Boot API]
-  B --> DB[(MySQL / 本地 H2)]
+  B --> DB[(MySQL)]
   B --> R[(Redis 短时防重)]
   U --> P[react-pdf 生成 Blob]
   P --> V[PDF.js 预览 / 下载]
@@ -139,15 +157,15 @@ erDiagram
   users ||--o{ export_logs : exports
 ```
 
-数据库 7 张业务表，另外增加 Flyway 迁移历史表。MySQL 使用 JSON 保存简历和套餐权益；H2 以 TEXT 保存等价 JSON。金额始终以整数“分”存储。
+开发、测试和生产统一使用 MySQL。数据库 7 张业务表，另外增加 Flyway 迁移历史表。MySQL 使用 JSON 保存简历和套餐权益，金额始终以整数“分”存储。
 
 支付锁定顺序统一为用户 → 订单；签名通过、金额一致、订单未过期时才允许 `CREATED → PAID`。订单状态和会员续期在同一事务提交，交易流水唯一。会员到期时间不写入 JWT。
 
 保存接口要求 `version`，冲突返回 409，前端保留本地草稿。免费导出时用户行锁串行校验 `PENDING / COMPLETED` 数量，避免并发超额。资源的 GET / PUT / DELETE / 复制、订单和导出接口都校验本人身份。
 
-## Docker Compose
+## 完整 Docker Compose 部署
 
-本机 Docker Desktop 当前未启动，Compose 编排尚未进行实际容器启动验证。
+前端、后端和数据库均在 Docker 中运行时，使用基础编排。Java 构建和运行均使用容器内的 JDK 21。
 
 ```powershell
 cd D:\cwj\resume_generator
@@ -155,11 +173,13 @@ cd D:\cwj\resume_generator
 docker compose up --build -d
 ```
 
-访问 <http://127.0.0.1:8088>。`init-env.ps1` 只在 `.env` 不存在时生成随机密钥，不覆盖已有配置。MySQL、Redis 不映射到主机端口，数据库通过数据卷持久化。
+访问 <http://127.0.0.1:8088>。基础编排中的 MySQL、Redis 通过 Docker 内网连接。`compose.dev.yml` 用于本地开发的端口映射，生产部署仅使用基础编排。两种方式复用同一组数据卷。
 
 默认 `APP_PROFILE=dev` 可演示模拟支付；改为 `prod` 后关闭开发功能。正式上线还需要域名、HTTPS、数据库备份、真实支付集成及运维配置。`compose` 只绑定本机地址，生产部署应按实际网关调整。
 
 ## 验证
+
+先启动 Docker Desktop。后端测试使用 Testcontainers 自动创建临时 MySQL 8.0 容器，分配随机端口，并执行与开发、生产相同的 Flyway 迁移。测试结束后自动移除容器，测试数据保存在该临时容器中。运行测试只需 Docker 引擎可用。
 
 ```powershell
 cd backend
@@ -173,7 +193,9 @@ JDK 21 去掉版本覆盖参数。PDF 检查使用生产模板组件，验证四
 
 业务测试覆盖 BCrypt/重复注册、未登录拦截、跨账号操作、VIP 校验、乐观锁冲突、并发下单幂等、支付回调并发重放、验签/金额/订单过期、退款与续费、并发导出额度和失败回收。
 
-详见 [验收记录](docs/verification.md) 和 [90 秒演示](docs/demo.md)。
+`MySqlTestConfiguration` 中集中定义测试数据库。Spring Boot 的 `@ServiceConnection` 自动提供连接参数，CI 使用相同测试入口。
+
+2026-11-06 已在本机 Docker MySQL 8.0.46、Redis 7 上完成验证。两条 MySQL Flyway 迁移、11 项 Testcontainers MySQL 集成测试、中文 JSON 保存回读、乐观锁 409、Redis 防重 429，以及 MySQL 容器重启后的数据回读均通过。Testcontainers 测试在没有 `.env` 时也能独立运行。验证使用 JDK 17 兼容模式。
 
 ## 页面截图
 

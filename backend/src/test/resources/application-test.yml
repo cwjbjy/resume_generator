@@ -1,0 +1,10 @@
+spring:
+  data:
+    redis:
+      password: ''
+app:
+  redis-enabled: false
+management:
+  health:
+    redis:
+      enabled: false

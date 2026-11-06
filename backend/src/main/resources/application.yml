@@ -8,7 +8,7 @@ spring:
       max-file-size: 2MB
       max-request-size: 2MB
   flyway:
-    locations: classpath:db/migration/{vendor}
+    locations: classpath:db/migration/mysql
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
