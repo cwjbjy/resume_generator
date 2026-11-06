@@ -1,0 +1,781 @@
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (min-width: 1400px) {
+  .template-hero {
+    max-width: none;
+  }
+  .hero-inner {
+    max-width: 1280px;
+    margin: auto;
+    padding-left: 40px;
+  }
+  .hero-art {
+    right: calc((100vw - 1280px)/2 + 92px);
+  }
+  .editor-workspace {
+    grid-template-columns: 90px 420px minmax(0, 1fr);
+  }
+}
+@media (max-width: 1150px) {
+  .header-inner {
+    padding: 0 28px;
+  }
+  .site-header nav {
+    margin-left: 50px;
+    gap: 26px;
+  }
+  .template-content {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+  .template-grid {
+    gap: 12px;
+  }
+  .catalog-layout {
+    grid-template-columns: 145px minmax(0, 1fr);
+    gap: 20px;
+  }
+  .catalog-sidebar {
+    padding-right: 10px;
+  }
+  .template-cover {
+    height: 245px;
+  }
+  .mini-resume {
+    transform: scale(0.235);
+  }
+  .template-card-info > div > span {
+    font-size: 8px;
+  }
+  .card-meta {
+    font-size: 8px;
+  }
+  .hero-art {
+    right: 35px;
+  }
+  .hero-inner {
+    padding-left: 28px;
+  }
+  .template-hero h1 {
+    font-size: 32px;
+  }
+  .section-heading > p {
+    font-size: 10px;
+  }
+  .my-resume-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .auth-story {
+    padding: 60px 35px 0;
+  }
+  .auth-story h1 {
+    font-size: 25px;
+  }
+  .auth-form-wrap {
+    padding: 35px;
+  }
+  .me-layout {
+    gap: 25px;
+    grid-template-columns: 205px 1fr;
+  }
+  .editor-title > input {
+    width: 180px;
+  }
+  .save-status {
+    font-size: 8px;
+  }
+  .editor-toolbar {
+    padding: 0 16px;
+  }
+  .editor-toolbar-actions {
+    gap: 6px;
+  }
+}
+@media (max-width: 900px) {
+  .site-header nav {
+    margin-left: 35px;
+    gap: 22px;
+  }
+  .header-actions {
+    gap: 15px;
+  }
+  .template-hero {
+    height: 270px;
+  }
+  .hero-inner {
+    padding-top: 43px;
+  }
+  .template-hero h1 {
+    font-size: 29px;
+  }
+  .hero-art {
+    right: -25px;
+    opacity: 0.6;
+    transform: scale(0.85);
+    transform-origin: right center;
+  }
+  .hero-inner > p {
+    max-width: 440px;
+  }
+  .hero-points {
+    gap: 13px;
+    font-size: 10px;
+  }
+  .template-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 26px 20px;
+  }
+  .template-cover {
+    height: 330px;
+  }
+  .mini-resume {
+    transform: scale(0.34);
+  }
+  .catalog-layout {
+    grid-template-columns: 145px minmax(0, 1fr);
+  }
+  .catalog-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .search-box {
+    width: 100%;
+  }
+  .template-card-info > div > span {
+    font-size: 10px;
+  }
+  .card-meta {
+    font-size: 9px;
+  }
+  .catalog-bottom > span + span {
+    display: none;
+  }
+  .section-heading > p {
+    display: none;
+  }
+  .site-footer {
+    padding: 25px 28px;
+  }
+  .site-footer > p {
+    display: none;
+  }
+  .auth-page {
+    grid-template-columns: 0.9fr 1.1fr;
+  }
+  .auth-story {
+    padding: 60px 25px 0;
+  }
+  .auth-story h1 {
+    font-size: 22px;
+  }
+  .auth-illustration {
+    padding-left: 5px;
+  }
+  .auth-success {
+    left: 0;
+    top: 280px;
+    padding: 16px;
+  }
+  .auth-resume {
+    transform: rotate(-7deg) scale(0.44);
+  }
+  .page-shell {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+  .me-layout {
+    grid-template-columns: 175px 1fr;
+    gap: 22px;
+  }
+  .my-resume-actions .button {
+    font-size: 8px;
+  }
+  .my-resume-info {
+    padding: 12px;
+  }
+  .my-resume-cover .mini-resume {
+    transform: scale(0.24);
+  }
+  .my-resume-cover {
+    height: 205px;
+  }
+  .order-row {
+    gap: 9px;
+    padding: 16px;
+  }
+  .order-symbol {
+    display: none;
+  }
+  .pricing-page {
+    padding-top: 40px;
+  }
+  .center-heading h1 {
+    font-size: 27px;
+  }
+  .detail-preview > .resume-paper {
+    zoom: 0.5;
+  }
+  .detail-preview {
+    height: 465px;
+    padding: 15px;
+  }
+  .detail-info {
+    padding-top: 15px;
+  }
+  .detail-info h2 {
+    font-size: 23px;
+  }
+}
+@media (max-width: 650px) {
+  .site-header {
+    height: 67px;
+  }
+  .header-inner {
+    padding: 0 18px;
+  }
+  .brand {
+    font-size: 17px;
+    gap: 8px;
+  }
+  .brand-mark {
+    width: 29px;
+    height: 32px;
+  }
+  .brand small {
+    font-size: 6px;
+    letter-spacing: 1.9px;
+  }
+  .site-header nav {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 67px;
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    height: auto;
+    padding: 15px 20px;
+    margin: 0;
+    box-shadow: 0 5px 20px #172b4d10;
+  }
+  .site-header nav.open {
+    display: flex;
+  }
+  .site-header nav a {
+    padding: 10px 4px;
+  }
+  .site-header nav a.active:after {
+    display: none;
+  }
+  .mobile-menu {
+    display: flex;
+  }
+  .header-actions {
+    gap: 9px;
+  }
+  .header-actions .button {
+    font-size: 10px;
+    padding: 7px 10px;
+    gap: 5px;
+  }
+  .header-actions .login-link {
+    font-size: 11px;
+  }
+  .user-pill {
+    font-size: 10px;
+    max-width: 125px;
+  }
+  .user-pill .avatar {
+    width: 25px;
+    height: 25px;
+  }
+  .header-actions > .icon-button:not(.mobile-menu) {
+    display: none;
+  }
+  .template-hero {
+    height: 249px;
+  }
+  .hero-inner {
+    padding: 31px 22px;
+  }
+  .template-hero h1 {
+    font-size: 25px;
+    max-width: 310px;
+    line-height: 1.7;
+    margin: 13px 0 7px;
+    letter-spacing: 0;
+  }
+  .template-hero h1 span {
+    display: block;
+  }
+  .template-hero p {
+    font-size: 10px;
+    max-width: 280px;
+    line-height: 1.9;
+  }
+  .hero-inner .eyebrow {
+    font-size: 8px;
+  }
+  .hero-points {
+    gap: 11px;
+    font-size: 8px;
+    margin-top: 16px;
+  }
+  .hero-points svg {
+    width: 11px;
+  }
+  .hero-points > span {
+    gap: 4px;
+  }
+  .hero-art {
+    right: -61px;
+    top: 20px;
+    transform: scale(0.53);
+    opacity: 0.3;
+  }
+  .template-content {
+    padding: 28px 20px;
+  }
+  .section-heading {
+    margin-bottom: 24px;
+  }
+  .section-heading h2 {
+    font-size: 18px;
+  }
+  .section-heading .eyebrow {
+    font-size: 8px;
+  }
+  .catalog-layout {
+    display: block;
+  }
+  .catalog-sidebar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 0 16px;
+    border: 0;
+    overflow: auto;
+  }
+  .sidebar-title,
+  .sidebar-tip {
+    display: none;
+  }
+  .catalog-sidebar > button {
+    font-size: 10px;
+    padding: 8px 10px;
+    width: auto;
+    white-space: nowrap;
+    gap: 8px;
+    margin: 0;
+  }
+  .catalog-sidebar > button > span + span {
+    font-size: 8px;
+  }
+  .catalog-toolbar {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 18px;
+    gap: 8px;
+  }
+  .filter-tabs {
+    gap: 1px;
+  }
+  .filter-tabs button {
+    font-size: 9px;
+    padding: 7px 8px;
+    gap: 3px;
+    white-space: nowrap;
+  }
+  .filter-tabs svg {
+    width: 11px;
+  }
+  .search-box {
+    width: 120px;
+    height: 30px;
+    padding: 0 7px;
+    gap: 5px;
+  }
+  .search-box input {
+    font-size: 9px;
+    min-width: 0;
+  }
+  .search-box svg {
+    width: 12px;
+  }
+  .template-grid {
+    gap: 22px 15px;
+  }
+  .template-cover {
+    height: 244px;
+    padding-top: 25px;
+  }
+  .mini-resume {
+    transform: scale(0.24);
+  }
+  .template-tag {
+    right: 6px;
+    top: 7px;
+    font-size: 7px;
+    padding: 3px 5px;
+  }
+  .template-tag svg {
+    width: 8px;
+  }
+  .template-card-info h3 {
+    font-size: 12px;
+  }
+  .template-card-info > div > span {
+    font-size: 8px;
+    line-height: 1.7;
+  }
+  .template-use {
+    padding: 4px;
+  }
+  .template-use svg {
+    width: 15px;
+  }
+  .card-meta {
+    font-size: 7px;
+    gap: 2px;
+    margin-top: 11px;
+  }
+  .card-meta svg {
+    width: 9px;
+  }
+  .template-card-info {
+    gap: 3px;
+  }
+  .catalog-bottom {
+    font-size: 8px;
+    margin-top: 24px;
+  }
+  .membership-banner {
+    padding: 20px 17px;
+    flex-wrap: wrap;
+    gap: 13px;
+    margin-top: 28px;
+  }
+  .banner-crown {
+    padding: 10px;
+  }
+  .banner-crown svg {
+    width: 22px;
+    height: 22px;
+  }
+  .membership-banner h3 {
+    font-size: 13px;
+  }
+  .membership-banner p {
+    font-size: 9px;
+    margin-top: 7px;
+  }
+  .membership-banner > .button {
+    margin-left: 55px;
+    font-size: 10px;
+    padding: 8px 13px;
+  }
+  .site-footer {
+    padding: 22px 20px;
+    gap: 10px;
+  }
+  .site-footer > .brand {
+    font-size: 12px;
+  }
+  .site-footer > span {
+    font-size: 8px;
+  }
+  .site-footer .brand-mark {
+    width: 22px;
+    height: 24px;
+  }
+  .site-footer .brand small {
+    font-size: 5px;
+  }
+  .auth-page {
+    display: block;
+    min-height: calc(100vh - 145px);
+  }
+  .auth-story {
+    display: none;
+  }
+  .auth-form-wrap {
+    padding: 55px 25px;
+  }
+  .auth-form {
+    width: 340px;
+  }
+  .auth-form h2 {
+    font-size: 27px;
+  }
+  .pricing-page {
+    padding: 35px 22px 45px;
+  }
+  .center-heading h1 {
+    font-size: 24px;
+    margin: 17px 0 12px;
+  }
+  .center-heading h1 span {
+    display: block;
+  }
+  .center-heading > p {
+    font-size: 10px;
+    line-height: 2;
+  }
+  .price-grid {
+    grid-template-columns: 1fr;
+    gap: 27px;
+    margin: 35px auto 25px;
+    max-width: 350px;
+  }
+  .price-card {
+    padding: 27px;
+  }
+  .price-card .check-list {
+    gap: 15px;
+  }
+  .pricing-assurance {
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 9px;
+  }
+  .pricing-assurance svg {
+    width: 14px;
+  }
+  .faq {
+    margin-top: 42px;
+  }
+  .faq h2 {
+    font-size: 18px;
+  }
+  .faq summary,
+  .faq details p {
+    font-size: 11px;
+  }
+  .page-shell {
+    padding: 30px 20px 45px;
+  }
+  .me-heading {
+    gap: 15px;
+    align-items: flex-start;
+  }
+  .me-heading h1 {
+    font-size: 20px;
+    line-height: 1.7;
+  }
+  .me-heading p {
+    font-size: 10px;
+    line-height: 1.8;
+  }
+  .me-heading .eyebrow {
+    font-size: 8px;
+  }
+  .me-heading > .button {
+    font-size: 10px;
+    padding: 8px 10px;
+    margin-top: 23px;
+  }
+  .me-layout {
+    display: block;
+  }
+  .profile-card {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    gap: 4px 12px;
+    padding: 16px;
+    text-align: left;
+    align-items: center;
+    margin-bottom: 25px;
+  }
+  .profile-avatar {
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
+    margin: 0;
+    grid-row: 1/3;
+  }
+  .profile-card h3 {
+    margin: 0;
+    font-size: 13px;
+  }
+  .profile-card > .identity {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+    font-size: 8px;
+    padding: 2px 7px;
+  }
+  .profile-card > p {
+    grid-column: 1/-1;
+    font-size: 9px;
+    margin: 9px 0 0;
+  }
+  .profile-card > .button {
+    grid-column: 3;
+    grid-row: 1/3;
+    font-size: 9px;
+    padding: 7px 9px;
+  }
+  .profile-upgrade {
+    display: none;
+  }
+  .workspace-tabs {
+    gap: 24px;
+    margin-bottom: 22px;
+  }
+  .workspace-tabs > button {
+    font-size: 11px;
+  }
+  .my-resume-grid {
+    gap: 16px;
+  }
+  .my-resume-cover {
+    height: 223px;
+  }
+  .my-resume-cover .mini-resume {
+    transform: scale(0.23);
+  }
+  .my-resume-info h3 {
+    font-size: 10px;
+  }
+  .my-resume-actions {
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 12px;
+  }
+  .my-resume-actions > .button {
+    width: 100%;
+    font-size: 9px;
+    margin-bottom: 5px;
+  }
+  .my-resume-actions > .icon-button {
+    padding: 5px;
+    flex: 1;
+  }
+  .new-resume-card {
+    min-height: 346px;
+    gap: 13px;
+  }
+  .new-resume-card h3 {
+    font-size: 11px;
+  }
+  .new-resume-card p {
+    font-size: 9px;
+  }
+  .order-row {
+    flex-wrap: wrap;
+    padding: 16px 12px;
+    gap: 10px;
+  }
+  .order-row > div {
+    flex-basis: 100%;
+  }
+  .order-row strong {
+    margin-right: auto;
+  }
+  .checkout-page {
+    padding: 28px 20px 45px;
+  }
+  .checkout-card {
+    padding: 28px 23px;
+  }
+  .checkout-card h1 {
+    font-size: 21px;
+  }
+  .checkout-card dl > div {
+    gap: 15px;
+  }
+  .checkout-card dd {
+    font-size: 8px;
+    max-width: 160px;
+  }
+  .modal-mask {
+    padding: 15px;
+  }
+  .modal {
+    padding: 20px;
+  }
+  .modal-header {
+    margin-bottom: 19px;
+  }
+  .modal-header h2 {
+    font-size: 15px;
+  }
+  .modal-description {
+    font-size: 12px;
+  }
+  .template-detail {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 15px;
+  }
+  .detail-info {
+    padding: 0;
+  }
+  .detail-info h2 {
+    font-size: 21px;
+    margin: 11px 0;
+  }
+  .detail-info > p {
+    font-size: 10px;
+  }
+  .detail-info .check-list {
+    margin: 17px 0;
+    gap: 10px;
+    font-size: 10px;
+  }
+  .detail-info .button {
+    width: 100%;
+  }
+  .detail-info .eyebrow {
+    font-size: 8px;
+  }
+  .detail-preview {
+    height: 455px;
+  }
+  .detail-preview > .resume-paper {
+    zoom: 0.49;
+  }
+  .switch-template-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 13px;
+  }
+  .switch-preview {
+    height: 215px;
+  }
+  .switch-preview .mini-resume {
+    transform: scale(0.22);
+  }
+  .pdf-frame {
+    height: 60vh;
+  }
+  .pdf-actions {
+    gap: 10px;
+  }
+  .pdf-actions > span {
+    font-size: 9px;
+  }
+  .pdf-actions .button {
+    font-size: 11px;
+  }
+  .toast {
+    font-size: 11px;
+    padding: 12px 17px;
+    bottom: 20px;
+    min-width: 240px;
+  }
+  .editor-page {
+    height: calc(100vh - 67px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *:before,
+  *:after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

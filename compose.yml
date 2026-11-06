@@ -1,0 +1,55 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: resumecraft
+      MYSQL_USER: resumecraft
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Run init-env.ps1 first}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Run init-env.ps1 first}
+      TZ: Asia/Shanghai
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes: ["mysql-data:/var/lib/mysql"]
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Run init-env.ps1 first}
+    command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""]
+    volumes: ["redis-data:/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+  backend:
+    build: ./backend
+    environment:
+      SPRING_PROFILES_ACTIVE: ${APP_PROFILE:-dev}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/resumecraft?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: resumecraft
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      MANAGEMENT_HEALTH_REDIS_ENABLED: "true"
+      APP_REDIS_ENABLED: "true"
+      JWT_SECRET: ${JWT_SECRET:?Run init-env.ps1 first}
+      PAYMENT_SECRET: ${PAYMENT_SECRET:?Run init-env.ps1 first}
+      TZ: Asia/Shanghai
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+  frontend:
+    build: ./frontend
+    ports: ["127.0.0.1:8088:80"]
+    depends_on: [backend]
+    restart: unless-stopped
+volumes:
+  mysql-data:
+  redis-data:

@@ -1,0 +1,348 @@
+.editor-page {
+  height: calc(100vh - 78px);
+  min-height: 680px;
+  display: flex;
+  flex-direction: column;
+  min-width: 1024px;
+}
+.editor-toolbar {
+  height: 67px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  gap: 20px;
+  flex-shrink: 0;
+}
+.editor-title {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  color: #90a0b5;
+}
+.toolbar-separator {
+  height: 20px;
+  width: 1px;
+  background: #e6ebf3;
+}
+.editor-title > input {
+  font-weight: 550;
+  color: #465b78;
+  width: 205px;
+  font-size: 12px;
+  padding: 7px;
+  border-color: transparent;
+  box-shadow: none;
+}
+.editor-title > input:hover {
+  border-color: #e2e8f1;
+}
+.save-status {
+  font-size: 9px;
+  color: #99a9bd;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.save-status.failed {
+  color: #ba8080;
+}
+.editor-toolbar-actions {
+  display: flex;
+  gap: 9px;
+  flex-shrink: 0;
+}
+.editor-workspace {
+  display: grid;
+  grid-template-columns: 83px 380px minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+}
+.editor-modules {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 8px;
+  background: #fff;
+  border-right: 1px solid var(--line);
+}
+.editor-modules > button {
+  width: 65px;
+  padding: 13px 2px;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 10px;
+  color: #9aa8bc;
+  border-radius: 7px;
+}
+.editor-modules > button.active {
+  color: var(--blue);
+  background: #eef3fd;
+  font-weight: 600;
+}
+.editor-vip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  color: #b2a18b;
+  margin-top: auto;
+  padding: 15px 0 7px;
+}
+.editor-vip > span {
+  background: #f5efdf;
+  color: #b69b66;
+  font-size: 9px;
+  padding: 3px 9px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+.editor-form {
+  background: white;
+  border-right: 1px solid var(--line);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+.editor-form-title {
+  padding: 25px 26px 0;
+}
+.editor-form-title .eyebrow {
+  font-size: 8px;
+}
+.editor-form-title h2 {
+  font-size: 21px;
+  font-weight: 550;
+  margin: 12px 0;
+}
+.editor-form-title p {
+  font-size: 10px;
+  color: #a0adbf;
+  line-height: 1.7;
+}
+.editor-fields {
+  padding: 25px 26px;
+  flex: 1;
+}
+.editor-fields label {
+  font-size: 10px;
+  margin-bottom: 20px;
+  gap: 8px;
+  color: #73829a;
+}
+.editor-fields input,
+.editor-fields textarea {
+  font-size: 11px;
+  border-radius: 5px;
+  padding: 10px 11px;
+  border-color: #e1e6ee;
+}
+.editor-fields input[type='month'] {
+  font-size: 10px;
+  padding: 9px 4px;
+}
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 14px;
+}
+.field-full {
+  grid-column: 1/-1;
+}
+.editor-tip {
+  padding: 13px;
+  background: #f5f7fb;
+  border-radius: 6px;
+  display: flex;
+  gap: 10px;
+  font-size: 10px;
+  color: #95a4ba;
+  line-height: 1.9;
+  align-items: flex-start;
+  margin-top: 22px;
+}
+.tiny-symbol {
+  font-size: 19px;
+  color: #b1bed1;
+  line-height: 1.4;
+}
+.editor-form-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  color: #b3bfce;
+  padding: 17px 12px;
+  border-top: 1px solid var(--line);
+}
+.entry-card {
+  padding: 15px 13px 0;
+  border: 1px solid #e4eaf2;
+  border-radius: 7px;
+  margin-bottom: 17px;
+  background: #fff;
+}
+.entry-card.dragging {
+  opacity: 0.4;
+  border-color: #739bdf;
+}
+.entry-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #edf1f6;
+}
+.entry-card-header > span {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #92a2b7;
+}
+.entry-card-header > div {
+  display: flex;
+}
+.entry-card-header .icon-button {
+  padding: 4px;
+}
+.entry-card label {
+  font-size: 10px;
+  margin-bottom: 17px;
+}
+.entry-card .field-grid {
+  gap: 0 8px;
+}
+.entry-card textarea {
+  font-size: 10px;
+}
+.add-entry {
+  border: 1px dashed #bdcce2;
+  color: #6e90c5;
+  background: #fafcff;
+  width: 100%;
+  font-size: 11px;
+}
+.field-hint {
+  font-size: 9px;
+  color: #a4b0c1;
+  line-height: 1.9;
+  margin-top: 12px;
+}
+.skill-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e1e6ee;
+  border-radius: 5px;
+}
+.skill-input input {
+  border: 0;
+  box-shadow: none;
+}
+.skill-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.skill-tags > span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #7a98c7;
+  background: #edf3fd;
+  border-radius: 4px;
+  padding: 7px 9px;
+  font-size: 10px;
+}
+.skill-tags button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #8ea8cf;
+  display: flex;
+}
+.editor-preview {
+  background: #e9edf3;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+.preview-toolbar {
+  height: 48px;
+  background: #f7f9fc;
+  border-bottom: 1px solid #e0e7f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 23px;
+  color: #7f92ac;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.preview-toolbar > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.live-dot {
+  height: 5px;
+  width: 5px;
+  background: #80ad99;
+  border-radius: 50%;
+  margin-right: 1px;
+}
+.preview-template {
+  color: #abb5c5;
+  font-size: 9px;
+}
+.zoom-controls > button {
+  background: none;
+  border: 0;
+  padding: 5px;
+  color: #a4b1c3;
+  display: flex;
+}
+.zoom-controls > span {
+  font-size: 9px;
+  min-width: 28px;
+  text-align: center;
+}
+.zoom-controls > .zoom-separator {
+  min-width: 1px;
+  width: 1px;
+  height: 13px;
+  background: #dfe5ef;
+  margin: 0 7px;
+}
+.preview-canvas {
+  overflow: auto;
+  padding: 27px 25px 35px;
+  flex: 1;
+  text-align: center;
+}
+.preview-page-holder {
+  display: inline-block;
+  text-align: left;
+  box-shadow: 0 6px 26px #182e4f15;
+  vertical-align: top;
+}
+.preview-footnote {
+  color: #a5b1c2;
+  font-size: 9px;
+  margin: 21px auto 0;
+}

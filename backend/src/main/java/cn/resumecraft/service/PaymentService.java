@@ -1,0 +1,122 @@
+package cn.resumecraft.service;
+
+import static cn.resumecraft.api.BizException.require;
+
+import cn.resumecraft.dto.PaymentCallback;
+import cn.resumecraft.mapper.OrderMapper;
+import cn.resumecraft.mapper.PlanMapper;
+import cn.resumecraft.mapper.UserMapper;
+import cn.resumecraft.model.Order;
+import cn.resumecraft.model.User;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Objects;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class PaymentService {
+  private final OrderMapper orderMapper;
+  private final PlanMapper planMapper;
+  private final UserMapper userMapper;
+  private final OrderService orderService;
+  private final PaymentSignatureService signatureService;
+  private final PaymentLogService paymentLogService;
+
+  public PaymentService(
+      OrderMapper orderMapper,
+      PlanMapper planMapper,
+      UserMapper userMapper,
+      OrderService orderService,
+      PaymentSignatureService signatureService,
+      PaymentLogService paymentLogService) {
+    this.orderMapper = orderMapper;
+    this.planMapper = planMapper;
+    this.userMapper = userMapper;
+    this.orderService = orderService;
+    this.signatureService = signatureService;
+    this.paymentLogService = paymentLogService;
+  }
+
+  @Transactional
+  public String callback(PaymentCallback callback, String signature) {
+    signatureService.verify(callback, signature);
+    Order found =
+        orderMapper.selectOne(new QueryWrapper<Order>().eq("order_no", callback.orderNo()));
+    require(found != null, 404, "订单不存在");
+    // Every membership mutation acquires the user lock before the order lock.
+    User user = userMapper.lock(found.userId);
+    Order order = orderMapper.lock(found.id);
+    require(order.amount.equals(callback.amount()), 400, "支付金额不匹配");
+    if (order.status.equals("PAID")) {
+      require(
+          callback.status().equals("SUCCESS")
+              && Objects.equals(order.transactionId, callback.transactionId()),
+          409,
+          "交易信息不匹配");
+      paymentLogService.record(order, callback, "DUPLICATE");
+      return "success";
+    }
+    require(
+        order.status.equals("CREATED") && order.expiredAt.isAfter(LocalDateTime.now()),
+        409,
+        "订单已关闭或已过期");
+    if (callback.status().equals("FAILED")) {
+      paymentLogService.record(order, callback, "FAILED");
+      return "success";
+    }
+    markPaid(order, callback.transactionId());
+    extendMembership(user, planMapper.selectById(order.planId).durationDays);
+    paymentLogService.record(order, callback, "SUCCESS");
+    return "success";
+  }
+
+  @Transactional
+  public Order refund(Long userId, Long orderId) {
+    orderService.owned(userId, orderId);
+    User user = userMapper.lock(userId);
+    Order order = orderMapper.lock(orderId);
+    require(order.status.equals("PAID"), 409, "只有已支付订单可以退款");
+    orderMapper.update(
+        null,
+        new UpdateWrapper<Order>()
+            .eq("id", orderId)
+            .eq("status", "PAID")
+            .set("status", "REFUNDED"));
+    int days = planMapper.selectById(order.planId).durationDays;
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime expiry = user.memberExpireAt == null ? now : user.memberExpireAt.minusDays(days);
+    if (expiry.isBefore(now)) {
+      expiry = now;
+    }
+    userMapper.update(
+        null, new UpdateWrapper<User>().eq("id", userId).set("member_expire_at", expiry));
+    paymentLogService.record(
+        order, Map.of("refundOrderNo", order.orderNo, "retractedDays", days), "REFUNDED");
+    return orderMapper.selectById(orderId);
+  }
+
+  private void markPaid(Order order, String transactionId) {
+    int updated =
+        orderMapper.update(
+            null,
+            new UpdateWrapper<Order>()
+                .eq("id", order.id)
+                .eq("status", "CREATED")
+                .set("status", "PAID")
+                .set("paid_at", LocalDateTime.now())
+                .set("transaction_id", transactionId));
+    require(updated == 1, 409, "订单状态已改变");
+  }
+
+  private void extendMembership(User user, int days) {
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime base =
+        user.memberExpireAt != null && user.memberExpireAt.isAfter(now) ? user.memberExpireAt : now;
+    userMapper.update(
+        null,
+        new UpdateWrapper<User>().eq("id", user.id).set("member_expire_at", base.plusDays(days)));
+  }
+}

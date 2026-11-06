@@ -1,0 +1,11 @@
+node_modules/
+dist/
+target/
+data/
+.tools/
+tmp/
+.env
+*.log
+*.local
+*.tsbuildinfo
+.DS_Store

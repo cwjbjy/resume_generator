@@ -1,0 +1,44 @@
+{
+  "name": "resume-craft-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test:pdf": "node scripts/verify-pdf.mjs",
+    "lint": "oxlint src scripts vite.config.ts --deny-warnings",
+    "lint:fix": "oxlint src scripts vite.config.ts --fix",
+    "format": "oxfmt --write src scripts vite.config.ts package.json tsconfig.json .oxlintrc.json .oxfmtrc.json index.html",
+    "format:check": "oxfmt --check src scripts vite.config.ts package.json tsconfig.json .oxlintrc.json .oxfmtrc.json index.html",
+    "check": "npm run lint && npm run format:check && npm run build"
+  },
+  "dependencies": {
+    "@react-pdf/renderer": "4.3.1",
+    "@tanstack/react-query": "^5.90.5",
+    "axios": "^1.13.2",
+    "dayjs": "^1.11.13",
+    "lucide-react": "^0.468.0",
+    "pdfjs-dist": "^5.4.296",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.9.5",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.17",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^4.7.0",
+    "esbuild": "^0.28.2",
+    "oxfmt": "^0.76.0",
+    "oxlint": "^1.91.0",
+    "tailwindcss": "^4.1.17",
+    "typescript": "~5.8.3",
+    "vite": "^6.4.1"
+  },
+  "overrides": {
+    "@react-pdf/layout": "4.4.1"
+  }
+}

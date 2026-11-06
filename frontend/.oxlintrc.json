@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "import", "jsx-a11y"],
+  "categories": { "correctness": "error" },
+  "rules": {
+    "no-unused-vars": "error",
+    "no-debugger": "error",
+    "eqeqeq": "error",
+    "import/no-cycle": "error",
+    "import/no-duplicates": "error",
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "error"
+  },
+  "ignorePatterns": ["node_modules", "dist", ".tools", "public"]
+}

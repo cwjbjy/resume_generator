@@ -1,0 +1,269 @@
+.me-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 34px;
+}
+.me-heading h1 {
+  font-size: 26px;
+  font-weight: 600;
+  margin: 13px 0;
+}
+.me-heading p {
+  font-size: 12px;
+  color: #98a4b5;
+}
+.me-layout {
+  display: grid;
+  grid-template-columns: 225px 1fr;
+  gap: 32px;
+}
+.profile-card {
+  padding: 30px 19px 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: white;
+  text-align: center;
+  height: max-content;
+}
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  font-size: 25px;
+  background: #eef3fc;
+  color: #7e99c9;
+  border-radius: 50%;
+  margin: 0 auto 15px;
+}
+.profile-card h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+.identity {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  font-size: 10px;
+  background: #f1f4f9;
+  color: #92a0b4;
+  border-radius: 15px;
+  padding: 4px 10px;
+}
+.identity.member {
+  background: #f9f3e6;
+  color: #ad8a4b;
+}
+.profile-card > p {
+  font-size: 9px;
+  color: #a3afbf;
+  margin: 12px 0 22px;
+}
+.profile-card .button {
+  font-size: 11px;
+  padding: 9px;
+}
+.profile-upgrade {
+  margin: 23px -19px 0;
+  border-top: 1px solid var(--line);
+  padding: 17px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #9b8662;
+  background: #faf8f4;
+  border-radius: 0 0 9px 9px;
+}
+.profile-upgrade > svg:last-child {
+  margin-left: auto;
+}
+.workspace-tabs {
+  display: flex;
+  gap: 30px;
+  border-bottom: 1px solid #e5eaf1;
+  margin-bottom: 25px;
+  padding-top: 4px;
+}
+.workspace-tabs > button {
+  position: relative;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  padding: 0 0 19px;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  color: #98a5b8;
+}
+.workspace-tabs > button.active {
+  color: var(--blue);
+  font-weight: 600;
+}
+.workspace-tabs > button.active:after {
+  position: absolute;
+  height: 2px;
+  background: var(--blue);
+  content: '';
+  bottom: -1px;
+  left: 0;
+  right: 0;
+}
+.workspace-tabs > button > span {
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 9px;
+  background: #edf3ff;
+  color: var(--blue);
+}
+.my-resume-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+.my-resume-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+.my-resume-cover {
+  height: 237px;
+  width: 100%;
+  border: 0;
+  background: #edf1f7;
+  display: flex;
+  justify-content: center;
+  padding-top: 18px;
+  overflow: hidden;
+}
+.my-resume-cover .mini-resume {
+  transform: scale(0.28);
+}
+.my-resume-info {
+  padding: 15px;
+}
+.my-resume-info h3 {
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-weight: 600;
+}
+.my-resume-info > p {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  font-size: 9px;
+  color: #a4adbd;
+  margin-top: 9px;
+}
+.my-resume-actions {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  margin-top: 16px;
+}
+.my-resume-actions > .button {
+  margin-right: auto;
+  font-size: 9px;
+  padding: 6px 7px;
+}
+.my-resume-actions > .icon-button {
+  padding: 4px;
+}
+.new-resume-card {
+  min-height: 343px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #d3deed;
+  border-radius: 8px;
+  background: #f6f9fe;
+  color: #8ca2c1;
+  gap: 15px;
+}
+.new-resume-card > span {
+  display: grid;
+  place-items: center;
+  background: #e9f0fc;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+.new-resume-card h3 {
+  font-size: 12px;
+  font-weight: 500;
+}
+.new-resume-card p {
+  font-size: 10px;
+  color: #a7b3c4;
+}
+.order-list {
+  border: 1px solid #e7edf5;
+  border-radius: 8px;
+  background: white;
+}
+.order-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  color: #7889a2;
+}
+.order-row:last-child {
+  border: 0;
+}
+.order-row > div {
+  flex: 1;
+  min-width: 0;
+}
+.order-row b {
+  font-size: 12px;
+  color: #5f718d;
+  font-weight: 500;
+}
+.order-row small {
+  display: block;
+  font-size: 9px;
+  color: #a0aec1;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+.order-row strong {
+  color: #5d6e87;
+  font-weight: 500;
+}
+.order-symbol {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #f6f2e9;
+  color: #b59e71;
+}
+.order-status {
+  background: #f1f4f8;
+  padding: 4px 7px;
+  border-radius: 4px;
+  font-size: 9px;
+  white-space: nowrap;
+  color: #9aa7b8;
+}
+.status-PAID {
+  color: #7eaa95;
+  background: #f0f8f3;
+}
+.status-CREATED {
+  color: #af9e74;
+  background: #fcf8ec;
+}
+.order-row > .button {
+  font-size: 9px;
+  padding: 6px 9px;
+}

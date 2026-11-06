@@ -1,0 +1,248 @@
+.pricing-page {
+  max-width: 1100px;
+  margin: auto;
+  padding: 56px 35px 70px;
+}
+.center-heading {
+  text-align: center;
+}
+.pill-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #f3f0e8;
+  padding: 7px 13px;
+  color: #ab8b58;
+  border: 1px solid #ebe5d7;
+  border-radius: 20px;
+  font-size: 11px;
+}
+.center-heading h1 {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.7;
+  letter-spacing: 0.5px;
+  margin: 18px 0 12px;
+}
+.center-heading h1 span {
+  color: var(--blue);
+}
+.center-heading > p {
+  font-size: 12px;
+  color: #97a2b2;
+}
+.member-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  color: #65927e;
+  font-size: 11px;
+  background: #eef7f1;
+  padding: 8px 13px;
+  border-radius: 5px;
+}
+.price-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 26px;
+  max-width: 760px;
+  margin: 50px auto 30px;
+}
+.price-card {
+  padding: 31px 32px 30px;
+  border: 1px solid #e0e7f1;
+  background: #fff;
+  border-radius: 10px;
+  position: relative;
+}
+.price-card.featured {
+  border: 1.5px solid #7b9cde;
+  background: #fbfcff;
+  box-shadow: 0 6px 26px #3568d40a;
+}
+.recommend {
+  position: absolute;
+  right: 20px;
+  top: -12px;
+  color: #fff;
+  background: var(--blue);
+  border: 3px solid #fbfcfe;
+  font-size: 9px;
+  line-height: 1.8;
+  border-radius: 15px;
+  padding: 1px 11px;
+}
+.plan-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 47px;
+  height: 47px;
+  color: #8a9bb7;
+  background: #f0f4fa;
+  border-radius: 9px;
+  margin-bottom: 20px;
+}
+.price-card h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+.price-card > p {
+  color: #99a4b4;
+  font-size: 11px;
+  margin-top: 10px;
+}
+.price {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  margin-top: 24px;
+}
+.price strong {
+  font-size: 44px;
+  letter-spacing: -2px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.price > span:first-child {
+  font-size: 19px;
+}
+.price > span:last-child {
+  font-size: 11px;
+  color: #a2abbb;
+  margin-left: 4px;
+}
+.plan-divider {
+  height: 1px;
+  background: #edf0f5;
+  margin-top: 19px;
+}
+.price-card .check-list {
+  gap: 18px;
+  margin: 28px 0 32px;
+}
+.pricing-assurance {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  font-size: 10px;
+  color: #94a1b6;
+}
+.pricing-assurance > span {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.faq {
+  max-width: 760px;
+  margin: 60px auto 0;
+}
+.faq h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 25px;
+  text-align: center;
+}
+.faq details {
+  border-bottom: 1px solid #e6ebf3;
+  padding: 18px 0;
+}
+.faq summary {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  cursor: pointer;
+  color: #64748b;
+}
+.faq details p {
+  font-size: 12px;
+  color: #97a3b4;
+  line-height: 1.9;
+  padding: 15px 0 0;
+}
+.checkout-page {
+  max-width: 600px;
+  margin: auto;
+  padding: 35px 30px 60px;
+}
+.back-link {
+  font-size: 11px;
+  color: #8393ab;
+}
+.checkout-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  padding: 34px 38px;
+  text-align: center;
+  margin-top: 25px;
+  box-shadow: 0 10px 30px #1c314706;
+}
+.checkout-icon {
+  width: 68px;
+  height: 68px;
+  background: #eef4fe;
+  color: #6085c1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 20px;
+}
+.checkout-card .eyebrow {
+  justify-content: center;
+  font-size: 9px;
+}
+.checkout-card h1 {
+  font-size: 23px;
+  font-weight: 600;
+  margin: 15px 0 12px;
+}
+.checkout-card > p {
+  font-size: 11px;
+  color: #9aabbf;
+}
+.checkout-amount {
+  font-size: 43px;
+  margin: 24px 0 20px;
+  font-weight: 600;
+  letter-spacing: -1px;
+}
+.checkout-card dl {
+  border-top: 1px solid #edf0f5;
+  border-bottom: 1px solid #edf0f5;
+  padding: 10px 0;
+  margin-bottom: 25px;
+  text-align: left;
+}
+.checkout-card dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 9px 0;
+  font-size: 11px;
+}
+.checkout-card dt {
+  color: #9da8b8;
+  white-space: nowrap;
+}
+.checkout-card dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
+  font-size: 10px;
+  color: #73839a;
+}
+.checkout-card dd.countdown {
+  color: var(--blue);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.checkout-security {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  color: #aab5c4;
+  font-size: 9px;
+  margin-top: 22px;
+}

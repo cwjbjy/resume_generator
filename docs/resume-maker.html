@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>简历工坊 · 静态原型（M1）</title>
+<style>
+  :root {
+    --bg: #f4f6f9; --card: #fff; --line: #e3e8ef; --line-strong: #cbd5e1;
+    --ink: #1f2937; --ink-2: #4b5563; --muted: #8b95a5;
+    --blue: #2563eb; --blue-soft: #eef4ff;
+    --green: #16a34a; --green-soft: #ecfdf3;
+    --amber: #d97706; --amber-soft: #fff7e6;
+    --red: #dc2626; --red-soft: #fef2f2;
+    --violet: #7c3aed; --violet-soft: #f3eefc;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--ink); font-size: 13px; line-height: 1.55; min-width: 1080px;
+  }
+  .topbar { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 8px; height: 52px; padding: 0 20px; background: #101828; color: #fff; box-shadow: 0 2px 10px rgba(16,24,40,.18); }
+  .topbar .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; margin-right: 12px; }
+  .topbar .logo i { width: 26px; height: 26px; border-radius: 7px; background: linear-gradient(135deg, #2563eb, #7c3aed); display: grid; place-items: center; font-style: normal; font-size: 13px; }
+  .topbar nav { display: flex; gap: 4px; flex: 1; }
+  .topbar nav button { border: 0; background: transparent; color: #cbd5e1; cursor: pointer; padding: 7px 13px; border-radius: 8px; font-size: 13px; font-family: inherit; }
+  .topbar nav button:hover { background: rgba(255,255,255,.08); color: #fff; }
+  .topbar nav button.on { background: #2563eb; color: #fff; }
+  .topbar .tag { font-size: 11px; color: #94a3b8; border: 1px solid #334155; border-radius: 99px; padding: 3px 10px; }
+  .topbar .vip-flag { font-size: 11px; border-radius: 99px; padding: 3px 10px; background: #374151; color: #cbd5e1; }
+  .topbar .vip-flag.on { background: linear-gradient(135deg,#f59e0b,#d97706); color: #fff; font-weight: 700; }
+
+  .view { display: none; padding: 22px; max-width: 1280px; margin: 0 auto; }
+  .view.on { display: block; }
+  .view-hint { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px dashed var(--line-strong); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 16px; color: var(--muted); font-size: 12px; }
+  .view-hint b { color: var(--ink-2); }
+  .h2 { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+  .h2-sub { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
+
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .b-free { background: var(--green-soft); color: var(--green); }
+  .b-vip { background: linear-gradient(135deg,#fef3c7,#fde68a); color: #92400e; }
+  .b-draft { background: var(--amber-soft); color: var(--amber); }
+  .b-done { background: var(--blue-soft); color: var(--blue); }
+  .b-paid { background: var(--green-soft); color: var(--green); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); background: #fff; color: var(--ink-2); border-radius: 8px; padding: 7px 14px; font-size: 12.5px; cursor: pointer; font-family: inherit; transition: all .15s; }
+  .btn:hover { border-color: var(--blue); color: var(--blue); }
+  .btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .btn.primary:hover { background: #1d4ed8; color: #fff; }
+  .btn.gold { background: linear-gradient(135deg,#f59e0b,#d97706); border-color: #d97706; color: #fff; }
+  .btn.gold:hover { filter: brightness(1.05); color: #fff; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.sm { padding: 4px 10px; font-size: 11.5px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
+
+  /* ===== 模块地图 ===== */
+  .stage-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+  .stage-card { padding: 16px; }
+  .stage-card .st-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .stage-card .st-num { width: 30px; height: 30px; border-radius: 8px; background: var(--blue); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .stage-card .st-t { font-size: 13.5px; font-weight: 700; }
+  .stage-card .st-p { font-size: 11px; color: var(--muted); }
+  .stage-card ul { list-style: none; }
+  .stage-card li { display: flex; justify-content: space-between; padding: 5px 0; border-top: 1px dashed var(--line); font-size: 12px; }
+  .stage-card li span:last-child { color: var(--muted); font-size: 11px; }
+  .flow { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-bottom: 18px; }
+  .flow .steps { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .flow .step { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 110px; padding: 10px 12px; border-radius: 8px; background: #f8fafc; border: 1px solid var(--line); }
+  .flow .step .k { font-weight: 700; font-size: 12.5px; }
+  .flow .step .v { font-size: 10.5px; color: var(--muted); text-align: center; }
+  .flow .step.hot { background: var(--blue-soft); border-color: #bfdbfe; }
+  .flow .step.hot .k { color: var(--blue); }
+  .flow .arrow { color: var(--muted); font-size: 15px; flex-shrink: 0; }
+  table.map { width: 100%; border-collapse: collapse; background: var(--card); }
+  table.map th, table.map td { border: 1px solid var(--line); padding: 7px 11px; text-align: left; font-size: 12px; }
+  table.map th { background: #f8fafc; font-weight: 700; color: var(--ink-2); }
+  table.map td code { background: #f1f5f9; border-radius: 4px; padding: 1px 6px; font-size: 11px; color: var(--violet); }
+  .table-wrap { overflow: hidden; }
+
+  /* ===== 模板中心 ===== */
+  .tpl-filter { display: flex; gap: 8px; margin-bottom: 14px; }
+  .tpl-filter button { border: 1px solid var(--line-strong); background: #fff; border-radius: 99px; padding: 6px 16px; font-size: 12.5px; cursor: pointer; font-family: inherit; color: var(--ink-2); }
+  .tpl-filter button.on { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700; }
+  .tpl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .tpl-card { overflow: hidden; }
+  .tpl-cover { height: 240px; position: relative; display: grid; place-items: center; border-bottom: 1px solid var(--line); }
+  .tpl-cover .mini-page { width: 62%; height: 80%; background: #fff; border: 1px solid #d8dee8; box-shadow: 0 6px 16px rgba(16,24,40,.12); padding: 10px; font-size: 7px; line-height: 1.5; overflow: hidden; }
+  .tpl-cover .corner { position: absolute; top: 10px; right: 10px; }
+  .tpl-body { padding: 12px 14px 14px; }
+  .tpl-body .r1 { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .tpl-body .nm { font-weight: 700; font-size: 13px; }
+  .tpl-body .use { font-size: 11px; color: var(--muted); }
+  .tpl-body .acts { display: flex; gap: 8px; margin-top: 10px; }
+  .tpl-body .acts .btn { flex: 1; justify-content: center; }
+
+  /* ===== 编辑器 ===== */
+  .ed-toolbar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 12px; }
+  .ed-toolbar .ttl { font-weight: 700; font-size: 13.5px; }
+  .ed-toolbar .save-st { font-size: 11px; color: var(--muted); }
+  .ed-toolbar select { border: 1px solid var(--line-strong); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; font-family: inherit; background: #fff; }
+  .ed-toolbar .spacer { flex: 1; }
+  .ed-body { display: grid; grid-template-columns: 420px 1fr; gap: 14px; min-height: 620px; }
+  .ed-form { display: flex; flex-direction: column; overflow: hidden; }
+  .ed-form .tabs { display: flex; border-bottom: 1px solid var(--line); background: #fbfcfe; border-radius: var(--radius) var(--radius) 0 0; }
+  .ed-form .tabs button { flex: 1; padding: 10px 0; border: 0; background: transparent; font-size: 12px; font-family: inherit; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
+  .ed-form .tabs button.on { color: var(--blue); border-bottom-color: var(--blue); font-weight: 700; }
+  .ed-form .panel { flex: 1; overflow-y: auto; padding: 14px 16px; }
+  .fld { margin-bottom: 12px; }
+  .fld label { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; font-weight: 600; }
+  .fld input, .fld textarea { width: 100%; border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; font-family: inherit; outline: none; background: #fff; }
+  .fld input:focus, .fld textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+  .fld textarea { resize: vertical; min-height: 64px; }
+  .entry { border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 10px; background: #fbfcfe; }
+  .entry .e-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .entry .e-head .t { font-size: 12px; font-weight: 700; color: var(--ink-2); }
+  .entry .del { border: 0; background: none; color: var(--red); cursor: pointer; font-size: 12px; font-family: inherit; }
+  .add-btn { width: 100%; border: 1px dashed var(--line-strong); background: #fff; border-radius: 8px; padding: 9px; font-size: 12.5px; cursor: pointer; color: var(--blue); font-family: inherit; }
+  .add-btn:hover { border-color: var(--blue); background: var(--blue-soft); }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .tag-chip { display: inline-flex; align-items: center; gap: 5px; background: var(--blue-soft); color: var(--blue); border-radius: 99px; padding: 3px 10px; font-size: 12px; }
+  .tag-chip .x { cursor: pointer; font-weight: 700; }
+  /* A4 预览 */
+  .ed-preview { display: flex; flex-direction: column; overflow: hidden; }
+  .ed-preview .p-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: #fbfcfe; border-bottom: 1px solid var(--line); }
+  .ed-preview .zoom { display: flex; gap: 6px; }
+  .ed-preview .zoom button { width: 30px; height: 30px; border: 1px solid var(--line-strong); border-radius: 7px; background: #fff; cursor: pointer; font-size: 13px; }
+  .ed-preview .canvas { flex: 1; overflow: auto; background: #e9edf3; display: grid; place-items: start center; padding: 20px 0; }
+  .a4 { width: 595px; min-height: 842px; background: #fff; box-shadow: 0 8px 30px rgba(16,24,40,.16); padding: 40px 42px; position: relative; }
+  .a4 .rb-name { font-size: 26px; font-weight: 800; letter-spacing: .02em; }
+  .a4 .rb-job { font-size: 13px; color: #666; margin: 3px 0 10px; }
+  .a4 .rb-headbar { margin: -40px -42px 20px; padding: 34px 42px 18px; color: #fff; }
+  .a4 .rb-headbar .rb-name { color: #fff; }
+  .a4 .rb-headbar .rb-job { color: rgba(255,255,255,.85); }
+  .a4 .rb-contact { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 11px; color: #555; margin-bottom: 16px; }
+  .a4 .rb-headbar .rb-contact { color: rgba(255,255,255,.9); margin-bottom: 0; }
+  .a4 .rb-sec { margin-bottom: 16px; }
+  .a4 .rb-sec-t { font-size: 13px; font-weight: 800; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .a4 .rb-sec-t::after { content: ""; flex: 1; height: 1px; background: #e2e8f0; }
+  .a4 .rb-item { margin-bottom: 9px; }
+  .a4 .rb-item .l1 { display: flex; justify-content: space-between; font-size: 12px; }
+  .a4 .rb-item .l1 b { font-weight: 700; }
+  .a4 .rb-item .l1 .dt { color: #888; font-size: 10.5px; }
+  .a4 .rb-item .l2 { font-size: 11px; color: #666; margin-top: 1px; }
+  .a4 .rb-skills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .a4 .rb-skill { font-size: 10.5px; border-radius: 4px; padding: 2px 9px; }
+  .a4 .rb-intro { font-size: 11.5px; color: #444; line-height: 1.7; }
+  .a4 .empty-tip { color: #bbb; font-style: normal; }
+
+  /* ===== 导出弹窗 ===== */
+  .modal-mask { position: fixed; inset: 0; background: rgba(16,24,40,.45); z-index: 100; display: none; place-items: center; }
+  .modal-mask.on { display: grid; }
+  .modal { width: 560px; background: #fff; border-radius: 14px; padding: 24px; box-shadow: 0 30px 70px rgba(16,24,40,.3); }
+  .modal h3 { font-size: 15px; margin-bottom: 14px; }
+  .pdf-stage { height: 300px; border: 1px solid var(--line); border-radius: 10px; display: grid; place-items: center; background: #f1f4f8; margin-bottom: 14px; overflow: hidden; }
+  .pdf-stage .spin { text-align: center; color: var(--muted); font-size: 12.5px; }
+  .pdf-stage .spinner { width: 40px; height: 40px; border: 3px solid var(--blue-soft); border-top-color: var(--blue); border-radius: 50%; margin: 0 auto 12px; animation: rot 0.9s linear infinite; }
+  @keyframes rot { to { transform: rotate(360deg); } }
+  .pdf-stage .pdf-mini { width: 210px; height: 297px; background: #fff; box-shadow: 0 6px 18px rgba(16,24,40,.15); padding: 14px 16px; overflow: hidden; font-size: 6.5px; line-height: 1.5; }
+  .modal .foot { display: flex; gap: 10px; justify-content: flex-end; align-items: center; }
+  .modal .quota { font-size: 11.5px; color: var(--muted); margin-right: auto; }
+
+  /* ===== 定价 ===== */
+  .price-grid { display: grid; grid-template-columns: repeat(2, 380px); gap: 18px; justify-content: center; }
+  .price-card { padding: 26px 24px; position: relative; }
+  .price-card.hot { border: 2px solid #f59e0b; }
+  .price-card .hot-tag { position: absolute; top: -11px; left: 24px; background: linear-gradient(135deg,#f59e0b,#d97706); color: #fff; font-size: 11px; border-radius: 99px; padding: 2px 12px; font-weight: 700; }
+  .price-card .pn { font-size: 14px; font-weight: 700; }
+  .price-card .pp { display: flex; align-items: baseline; gap: 4px; margin: 14px 0 4px; }
+  .price-card .pp .num { font-size: 30px; font-weight: 800; color: var(--ink); }
+  .price-card .pp .unit { color: var(--muted); font-size: 12px; }
+  .price-card .pd { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
+  .price-card ul { list-style: none; margin-bottom: 18px; }
+  .price-card li { padding: 5px 0; font-size: 12.5px; display: flex; gap: 7px; }
+  .price-card li::before { content: "✓"; color: var(--green); font-weight: 700; }
+  .price-card li.no::before { content: "—"; color: #cbd5e1; }
+  .price-card .btn { width: 100%; justify-content: center; padding: 10px; }
+
+  /* ===== 支付 ===== */
+  .pay-wrap { display: grid; place-items: start center; padding-top: 30px; }
+  .pay-card { width: 460px; padding: 26px; }
+  .pay-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; border-bottom: 1px dashed var(--line); }
+  .pay-row .l { color: var(--muted); }
+  .pay-row .v { font-weight: 700; }
+  .pay-row.total .v { color: #d97706; font-size: 18px; }
+  .pay-qr { display: grid; place-items: center; padding: 18px 0; }
+  .pay-qr .qr { width: 150px; height: 150px; background: repeating-conic-gradient(#1f2937 0% 25%, #fff 0% 50%) 0 0 / 30px 30px; border-radius: 8px; border: 1px solid var(--line); }
+  .pay-qr .hint { font-size: 11px; color: var(--muted); margin-top: 10px; }
+  .pay-ok { text-align: center; padding: 40px 20px; }
+  .pay-ok .big { font-size: 44px; margin-bottom: 10px; }
+  .pay-ok .ok-t { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+  .pay-ok .ok-s { font-size: 12.5px; color: var(--muted); margin-bottom: 20px; }
+
+  /* ===== 个人中心 ===== */
+  .me-grid { display: grid; grid-template-columns: 300px 1fr; gap: 14px; }
+  .me-side { display: flex; flex-direction: column; gap: 14px; }
+  .me-user { padding: 20px; text-align: center; }
+  .me-user .av { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg,#2563eb,#7c3aed); color: #fff; display: grid; place-items: center; font-size: 22px; font-weight: 800; margin: 0 auto 10px; }
+  .me-user .nm { font-weight: 800; font-size: 15px; }
+  .me-user .sub { font-size: 11.5px; color: var(--muted); margin-bottom: 12px; }
+  .me-mb { padding: 16px; }
+  .me-mb .mb-t { font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 8px; }
+  .me-mb .mb-state { font-size: 13px; font-weight: 700; }
+  .me-mb .mb-state.no { color: var(--muted); }
+  .me-mb .mb-state.yes { color: #d97706; }
+  .me-mb .mb-until { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  .me-main { display: flex; flex-direction: column; gap: 14px; }
+  .resume-item { display: flex; align-items: center; gap: 14px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+  .resume-item .thumb { width: 42px; height: 58px; border: 1px solid var(--line); border-radius: 5px; flex-shrink: 0; display: grid; place-items: center; font-size: 10px; color: var(--muted); background: #f8fafc; }
+  .resume-item .info { flex: 1; min-width: 0; }
+  .resume-item .t { font-weight: 700; font-size: 13px; }
+  .resume-item .s { font-size: 11px; color: var(--muted); }
+  .resume-item .acts { display: flex; gap: 6px; }
+  table.log { width: 100%; border-collapse: collapse; }
+  table.log th, table.log td { border-bottom: 1px solid var(--line); padding: 9px 12px; text-align: left; font-size: 12px; }
+  table.log th { background: #f8fafc; font-weight: 700; color: var(--ink-2); }
+
+  /* ===== 登录 ===== */
+  .login-wrap { display: grid; place-items: center; padding-top: 50px; }
+  .login-card { width: 380px; padding: 30px 28px; }
+  .login-card .lg-logo { width: 44px; height: 44px; border-radius: 11px; background: linear-gradient(135deg, #2563eb, #7c3aed); margin: 0 auto 14px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 18px; }
+  .login-card h1 { font-size: 17px; text-align: center; margin-bottom: 4px; }
+  .login-card .sub { text-align: center; color: var(--muted); font-size: 12px; margin-bottom: 22px; }
+  .login-tabs { display: flex; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+  .login-tabs button { flex: 1; padding: 9px 0; border: 0; background: transparent; font-size: 13px; font-family: inherit; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
+  .login-tabs button.on { color: var(--blue); border-bottom-color: var(--blue); font-weight: 700; }
+  .fld { margin-bottom: 13px; }
+  .fld label { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 5px; font-weight: 600; }
+  .fld input { width: 100%; border: 1px solid var(--line-strong); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; outline: none; }
+  .fld input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+  .login-card .btn { width: 100%; justify-content: center; padding: 10px; margin-top: 4px; }
+  .login-note { margin-top: 16px; font-size: 11px; color: var(--muted); text-align: center; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><i>R</i>简历工坊 · M1 原型</div>
+  <nav id="nav">
+    <button data-v="v-map" class="on">模块地图</button>
+    <button data-v="v-tpl">模板中心</button>
+    <button data-v="v-login">登录/注册</button>
+    <button data-v="v-editor">简历编辑器</button>
+    <button data-v="v-price">会员定价</button>
+    <button data-v="v-pay">支付页</button>
+    <button data-v="v-me">个人中心</button>
+  </nav>
+  <span class="vip-flag" id="vip-flag">未开通会员</span>
+  <span class="tag">静态原型 · 演示交互可用</span>
+</div>
+
+<!-- 模块地图 -->
+<div class="view on" id="v-map">
+  <div class="view-hint">💡 <b>模块地图</b>——6 个开发阶段、33 个功能点（F01-F33），与 <code>resume-maker-m1-design.md</code> 完全对应。下方表格是功能点明细。</div>
+  <div class="stage-row">
+    <div class="card stage-card">
+      <div class="st-head"><span class="st-num">0</span><div><div class="st-t">工程底座</div><div class="st-p">F01-F04 · 骨架先行</div></div></div>
+      <ul><li><span>后端工程初始化</span><span>F01</span></li><li><span>统一响应与异常</span><span>F02</span></li><li><span>Flyway 建表+种子</span><span>F03</span></li><li><span>前端工程初始化</span><span>F04</span></li></ul>
+    </div>
+    <div class="card stage-card">
+      <div class="st-head"><span class="st-num" style="background:#7c3aed">1</span><div><div class="st-t">认证</div><div class="st-p">F05-F08 · 能登录</div></div></div>
+      <ul><li><span>注册（BCrypt）</span><span>F05</span></li><li><span>登录（JWT）</span><span>F06</span></li><li><span>前端路由守卫</span><span>F07</span></li><li><span>个人资料编辑</span><span>F08</span></li></ul>
+    </div>
+    <div class="card stage-card">
+      <div class="st-head"><span class="st-num" style="background:#0ea5e9">2</span><div><div class="st-t">模板中心</div><div class="st-p">F09-F10 · 能选模板</div></div></div>
+      <ul><li><span>模板列表页</span><span>F09</span></li><li><span>模板详情页</span><span>F10</span></li></ul>
+    </div>
+    <div class="card stage-card">
+      <div class="st-head"><span class="st-num" style="background:#16a34a">3</span><div><div class="st-t">简历编辑器</div><div class="st-p">F11-F19 · 产品可用</div></div></div>
+      <ul><li><span>新建/列表/骨架</span><span>F11-13</span></li><li><span>基本信息+教育</span><span>F14-15</span></li><li><span>工作+项目+技能</span><span>F16-17</span></li><li><span>自动保存+模板切换</span><span>F18-19</span></li></ul>
+    </div>
+    <div class="card stage-card">
+      <div class="st-head"><span class="st-num" style="background:#d97706">4</span><div><div class="st-t">导出</div><div class="st-p">F20-F23 · 能下 PDF</div></div></div>
+      <ul><li><span>PDF 生成 react-pdf</span><span>F20</span></li><li><span>导出权益校验</span><span>F21</span></li><li><span>导出后预览下载</span><span>F22</span></li><li><span>失败兜底</span><span>F23</span></li></ul>
+    </div>
+    <div class="card stage-card">
+      <div class="st-head"><span class="st-num" style="background:#dc2626">5</span><div><div class="st-t">会员与支付</div><div class="st-p">F24-F29 · 商业闭环</div></div></div>
+      <ul><li><span>定价页</span><span>F24</span></li><li><span>创建订单+模拟支付</span><span>F25-26</span></li><li><span>回调验签+幂等</span><span>F27</span></li><li><span>会员权益+退款</span><span>F28-29</span></li></ul>
+    </div>
+  </div>
+  <div class="flow">
+    <div class="h2">用户主线（面试 90 秒演完）</div>
+    <div class="h2-sub">注册 → 选模板 → 编辑实时预览 → 导出 PDF → 买会员 → 解锁 VIP 模板再导出</div>
+    <div class="steps">
+      <div class="step"><span class="k">注册/登录</span><span class="v">JWT + BCrypt<br/>F05-F06</span></div>
+      <span class="arrow">→</span>
+      <div class="step"><span class="k">选模板</span><span class="v">4 套原创<br/>免费/VIP 角标</span></div>
+      <span class="arrow">→</span>
+      <div class="step hot"><span class="k">在线编辑</span><span class="v">左表单右 A4<br/>实时预览+自动保存</span></div>
+      <span class="arrow">→</span>
+      <div class="step hot"><span class="k">导出 PDF</span><span class="v">react-pdf 生成<br/>权益校验+次数限制</span></div>
+      <span class="arrow">→</span>
+      <div class="step"><span class="k">开通会员</span><span class="v">订单状态机<br/>回调幂等 F27</span></div>
+      <span class="arrow">→</span>
+      <div class="step"><span class="k">VIP 模板导出</span><span class="v">权益即时生效<br/>F28</span></div>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <div class="h2" style="margin-bottom:10px">功能点明细（与 md 文档逐条对应，做一条勾一条）</div>
+    <table class="map">
+      <thead><tr><th style="width:12%">阶段</th><th style="width:14%">编号</th><th>功能</th><th style="width:30%">验收核心（1 条代表）</th><th style="width:10%">优先级</th></tr></thead>
+      <tbody id="map-rows"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 模板中心 -->
+<div class="view" id="v-tpl">
+  <div class="view-hint">💡 <b>模板中心</b>（F09-F10）——4 套原创模板；点"使用此模板"进入编辑器，VIP 模板对非会员弹引导。</div>
+  <div class="tpl-filter">
+    <button class="on" onclick="tplFilter('all',this)">全部</button>
+    <button onclick="tplFilter('free',this)">免费</button>
+    <button onclick="tplFilter('vip',this)">VIP</button>
+  </div>
+  <div class="tpl-grid" id="tpl-grid"></div>
+</div>
+
+<!-- 登录/注册 -->
+<div class="view" id="v-login">
+  <div class="view-hint">💡 <b>登录/注册</b>（F05-F07）——密码 BCrypt 存储、JWT 登录；密码错误统一提示"用户名或密码错误"（防枚举）。</div>
+  <div class="login-wrap">
+    <div class="card login-card">
+      <div class="lg-logo">R</div>
+      <h1 id="login-title">登录简历工坊</h1>
+      <p class="sub">在线简历 · 模板 · 导出 PDF</p>
+      <div class="login-tabs">
+        <button class="on" id="lt-login" onclick="loginTab('login')">登录</button>
+        <button id="lt-reg" onclick="loginTab('reg')">注册</button>
+      </div>
+      <div class="fld" id="fld-email" style="display:none"><label>邮箱</label><input value="demo@resume.cn" readonly /></div>
+      <div class="fld"><label>用户名</label><input value="user01" readonly /></div>
+      <div class="fld"><label>密码</label><input type="password" value="123456" readonly /></div>
+      <button class="btn primary" onclick="go('v-editor'); vipHint()">登录（原型演示）</button>
+      <div class="login-note">种子账号：user01 / 123456 · vip01 / 123456<br/>JWT 2 小时过期；会员状态实时查库，不写进 JWT</div>
+    </div>
+  </div>
+</div>
+
+<!-- 简历编辑器 -->
+<div class="view" id="v-editor">
+  <div class="view-hint">💡 <b>简历编辑器</b>（F11-F19，核心）——左侧表单输入实时同步右侧 A4 预览；顶栏可切换模板、点"导出"体验 PDF 流程。数据/模板分离：同一份数据换模板即换渲染。</div>
+  <div class="ed-toolbar">
+    <span class="ttl" id="ed-title">我的简历-现代简约</span>
+    <span class="save-st" id="save-st">已保存 14:32</span>
+    <span class="badge b-free" id="ed-tpl-tag">免费</span>
+    <span class="spacer"></span>
+    <select id="tpl-select" onchange="switchTpl(this.value)"></select>
+    <button class="btn" id="btn-export" onclick="openExport()">⬇ 导出 PDF</button>
+  </div>
+  <div class="ed-body">
+    <div class="card ed-form">
+      <div class="tabs" id="ed-tabs">
+        <button class="on" data-t="basic">基本信息</button>
+        <button data-t="edu">教育经历</button>
+        <button data-t="work">工作经历</button>
+        <button data-t="proj">项目经验</button>
+        <button data-t="skill">技能</button>
+      </div>
+      <div class="panel" id="ed-panel"></div>
+    </div>
+    <div class="card ed-preview">
+      <div class="p-head">
+        <span style="font-weight:700;font-size:13px">A4 实时预览</span>
+        <div class="zoom">
+          <button onclick="zoom(-10)">−</button>
+          <button onclick="zoom(10)">＋</button>
+          <span style="font-size:11px;color:var(--muted);align-self:center" id="zoom-v">100%</span>
+        </div>
+      </div>
+      <div class="canvas" id="preview-canvas"><div class="a4" id="a4"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 会员定价 -->
+<div class="view" id="v-price">
+  <div class="view-hint">💡 <b>会员定价</b>（F24）——金额后端以"分"存储；会员到期时间 <code>member_expire_at</code> 续期叠加。</div>
+  <div class="price-grid">
+    <div class="card price-card">
+      <div class="pn">免费版</div>
+      <div class="pp"><span class="num">¥0</span></div>
+      <div class="pd">注册即用</div>
+      <ul>
+        <li>2 套免费模板</li>
+        <li>每天导出 1 次</li>
+        <li class="no">VIP 模板</li>
+        <li class="no">导出去水印</li>
+        <li class="no">不限导出次数</li>
+      </ul>
+      <button class="btn" onclick="go('v-tpl')">继续使用免费版</button>
+    </div>
+    <div class="card price-card hot">
+      <span class="hot-tag">推荐 · 年付省 66%</span>
+      <div class="pn">年度会员</div>
+      <div class="pp"><span class="num">¥99</span><span class="unit">/年</span></div>
+      <div class="pd">折合 ¥8.25/月</div>
+      <ul>
+        <li>全部 4 套模板</li>
+        <li>导出不限次数 + 去水印</li>
+        <li>新模板抢先体验</li>
+        <li>专属客服通道</li>
+      </ul>
+      <button class="btn gold" onclick="buy(9900,'年度会员')">立即开通 ¥99</button>
+      <div style="text-align:center;margin-top:10px"><button class="btn sm" onclick="buy(1990,'月度会员')">或开通月度 ¥19.9</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- 支付页 -->
+<div class="view" id="v-pay">
+  <div class="view-hint">💡 <b>支付页</b>（F25-F27）——订单状态机 <code>CREATED→PAID/EXPIRED</code>；点"模拟支付成功"会走完整回调链路（验签+幂等），15 分钟内未支付自动过期。</div>
+  <div class="pay-wrap">
+    <div class="card pay-card" id="pay-card">
+      <h3 style="margin-bottom:14px">订单支付</h3>
+      <div class="pay-row"><span class="l">订单号</span><span class="v" id="pay-no">RC20261104-8842</span></div>
+      <div class="pay-row"><span class="l">商品</span><span class="v" id="pay-item">年度会员（365 天）</span></div>
+      <div class="pay-row"><span class="l">创建时间</span><span class="v">2026-11-04 14:32:08</span></div>
+      <div class="pay-row"><span class="l">剩余支付时间</span><span class="v" style="color:var(--amber)">14:59</span></div>
+      <div class="pay-row total"><span class="l">应付金额</span><span class="v" id="pay-amt">¥99.00</span></div>
+      <div class="pay-qr">
+        <div class="qr"></div>
+        <div class="hint">模拟支付通道（dev 环境）｜生产环境替换为支付宝沙箱</div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn primary" style="flex:1;justify-content:center" onclick="mockPay(true)">✅ 模拟支付成功</button>
+        <button class="btn" style="flex:1;justify-content:center" onclick="mockPay(false)">❌ 模拟支付失败</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 个人中心 -->
+<div class="view" id="v-me">
+  <div class="view-hint">💡 <b>个人中心</b>（F08/F12/F28）——我的简历列表、会员状态、导出记录（export_logs）。</div>
+  <div class="me-grid">
+    <div class="me-side">
+      <div class="card me-user">
+        <div class="av">曹</div>
+        <div class="nm">曹文杰</div>
+        <div class="sub">user01 · 注册于 2026-10-28</div>
+        <button class="btn sm" onclick="go('v-editor')">编辑资料</button>
+      </div>
+      <div class="card me-mb" id="me-mb">
+        <div class="mb-t">会员状态</div>
+        <div class="mb-state no" id="mb-state">未开通会员</div>
+        <div class="mb-until" id="mb-until">开通后可解锁 VIP 模板、无限导出</div>
+        <div style="margin-top:12px"><button class="btn gold" style="width:100%;justify-content:center" onclick="go('v-price')">开通会员</button></div>
+      </div>
+    </div>
+    <div class="me-main">
+      <div class="card">
+        <div class="ed-preview" style="border:0"><div class="p-head"><span class="t" style="font-weight:700">我的简历（2）</span><button class="btn sm primary" onclick="go('v-tpl')">+ 新建简历</button></div></div>
+        <div id="me-resumes">
+          <div class="resume-item">
+            <div class="thumb">预览图</div>
+            <div class="info"><div class="t">曹文杰-前端工程师</div><div class="s">现代简约 · 更新于 14:20</div></div>
+            <span class="badge b-draft">草稿</span>
+            <div class="acts"><button class="btn sm" onclick="go('v-editor')">编辑</button><button class="btn sm" onclick="openExport()">导出</button></div>
+          </div>
+          <div class="resume-item">
+            <div class="thumb">预览图</div>
+            <div class="info"><div class="t">曹文杰-全栈工程师</div><div class="s">经典商务 · 更新于 昨天</div></div>
+            <span class="badge b-done">已导出 3 次</span>
+            <div class="acts"><button class="btn sm" onclick="go('v-editor')">编辑</button><button class="btn sm" onclick="openExport()">导出</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ed-preview" style="border:0"><div class="p-head"><span class="t" style="font-weight:700">导出记录（export_logs）</span></div></div>
+        <table class="log">
+          <thead><tr><th>时间</th><th>简历</th><th>模板</th><th>结果</th></tr></thead>
+          <tbody id="export-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 导出弹窗 -->
+<div class="modal-mask" id="export-mask">
+  <div class="modal">
+    <h3>导出 PDF</h3>
+    <div class="pdf-stage" id="pdf-stage"></div>
+    <div class="foot">
+      <span class="quota" id="quota-tip">免费用户：今天剩余 1 次导出</span>
+      <button class="btn" onclick="closeExport()">关闭</button>
+      <button class="btn primary" id="dl-btn" onclick="doDownload()" disabled>下载 PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ 全局状态 ============ */
+const member = { active: false, expireAt: null };
+let exportCount = 0;
+const TEMPLATES = [
+  { id: 't1', name: '现代简约', vip: false, color: '#2563eb', head: true,  style: 'modern' },
+  { id: 't2', name: '经典商务', vip: false, color: '#334155', head: true,  style: 'classic' },
+  { id: 't3', name: '清新活力', vip: true,  color: '#16a34a', head: false, style: 'fresh' },
+  { id: 't4', name: '极简黑白', vip: true,  color: '#111827', head: true,  style: 'mono' },
+];
+let curTpl = TEMPLATES[0];
+const state = {
+  basic: { name: '曹文杰', job: '前端工程师', phone: '138-0000-0000', email: 'cwj@resume.cn', city: '上海', intro: '8 年前端开发经验，主导过 3 个中大型管理系统的架构设计与落地，擅长 Vue/React 生态；近期转型 Java 全栈，已独立完成 Spring Boot 3 电商项目。' },
+  edu: [
+    { school: '上海理工大学', major: '计算机科学与技术', degree: '本科', start: '2014.09', end: '2018.06' },
+  ],
+  work: [
+    { company: '某互联网科技公司', role: '高级前端工程师', start: '2021.03', end: '至今', desc: '负责数据中台前端架构，搭建微前端基座；\n主导组件库建设，覆盖 20+ 业务模块，研发效率提升 40%；\n带 3 人小组，制定前端规范与 Code Review 机制。' },
+    { company: '某电商公司', role: '前端工程师', start: '2018.07', end: '2021.02', desc: '负责商城 H5 与小程序，双端日活 50w+；\n性能优化：首屏时间 3.2s → 1.4s。' },
+  ],
+  proj: [
+    { name: '数据中台', role: '前端负责人', desc: 'Vue3 + TS + Vite；微前端 qiankun；实现权限菜单、动态报表。' },
+  ],
+  skills: ['Vue3', 'React', 'TypeScript', 'Java', 'Spring Boot', 'MySQL', 'Redis'],
+};
+let curTab = 'basic';
+let zoomV = 100;
+
+/* ============ 导航 ============ */
+const navBtns = document.querySelectorAll('#nav button');
+function go(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  navBtns.forEach(b => b.classList.toggle('on', b.dataset.v === id));
+}
+navBtns.forEach(b => b.addEventListener('click', () => go(b.dataset.v)));
+
+/* ============ 模块地图表格 ============ */
+const F_LIST = [
+  ['0','F01','后端工程初始化','mvn 启动 + /actuator/health UP','P0'],['0','F02','统一响应与异常','{code,message,data}；500 不外泄堆栈','P0'],
+  ['0','F03','Flyway 建表+种子','7 表 + 4 模板 2 套餐种子','P0'],['0','F04','前端工程初始化','6 路由 + axios 拦截器','P0'],
+  ['1','F05','注册','BCrypt + 用户名唯一（并发安全）','P0'],['1','F06','登录 JWT','错误统一提示防枚举','P0'],
+  ['1','F07','路由守卫','未登录跳转 + 401 统一处理','P0'],['1','F08','资料编辑','头像上传 2MB 限制','P1'],
+  ['2','F09','模板列表页','网格 + 免费/VIP 筛选','P0'],['2','F10','模板详情页','VIP 模板未登录/非会员引导','P0'],
+  ['3','F11','新建简历','选模板创建；VIP 校验资格','P0'],['3','F12','我的简历列表','重命名/复制/删除','P0'],
+  ['3','F13','编辑器骨架','A4 比例 aspect-ratio 210/297','P0'],['3','F14','基本信息','输入实时同步预览','P0'],
+  ['3','F15','教育经历','时间校验 + 倒序排列','P0'],['3','F16','工作经历','条目增删改 + 拖拽排序','P0'],
+  ['3','F17','项目/技能/自定义','技能标签输入；自定义模块','P0'],['3','F18','自动保存','800ms 防抖 + 已保存时间','P0'],
+  ['3','F19','模板切换','数据不变换渲染','P0'],
+  ['4','F20','PDF 生成','4 模板 A4 分页正确、中文正常','P0'],['4','F21','导出权益校验','免费 1 次/天；Redis 计数','P0'],
+  ['4','F22','导出后预览下载','Blob + iframe 预览 + 下载','P0'],['4','F23','导出失败兜底','失败不误扣次数','P1'],
+  ['5','F24','定价页','金额用"分"存储','P0'],['5','F25','创建订单','order_no + 15 分钟过期','P0'],
+  ['5','F26','模拟支付','mock 走完整回调路径','P0'],['5','F27','回调验签+幂等','重放 10 次只生效 1 次','P0'],
+  ['5','F28','会员权益展示','到期时间续期叠加','P0'],['5','F29','退款','仅 PAID 可退 + 权益回退','P1'],
+  ['6','F30','Docker Compose','docker compose up 一键起','P0'],['6','F31','README+架构图','含 4 张截图','P0'],
+  ['6','F32','面试演示脚本','90 秒走查可离线演示','P0'],['6','F33','pdfjs 预览增强','逐页/缩放，失败回退 iframe','P2'],
+];
+document.getElementById('map-rows').innerHTML = F_LIST.map(r =>
+  '<tr><td>' + r[0] + '</td><td><code>' + r[1] + '</code></td><td>' + r[2] + '</td><td>' + r[3] + '</td><td>' + r[4] + '</td></tr>'
+).join('');
+
+/* ============ 模板中心 ============ */
+let tplFilterKey = 'all';
+function tplFilter(k, btn) {
+  tplFilterKey = k;
+  document.querySelectorAll('.tpl-filter button').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderTplGrid();
+}
+function renderTplGrid() {
+  const grid = document.getElementById('tpl-grid');
+  grid.innerHTML = TEMPLATES.filter(t => tplFilterKey === 'all' || (tplFilterKey === 'vip' ? t.vip : !t.vip)).map(t => {
+    const mini = miniPageHTML(t);
+    return '<div class="card tpl-card">' +
+      '<div class="tpl-cover" style="background:' + (t.head ? t.color + '22' : '#f8fafc') + '">' +
+      '<div class="mini-page">' + mini + '</div>' +
+      '<span class="corner"><span class="badge ' + (t.vip ? 'b-vip' : 'b-free') + '">' + (t.vip ? 'VIP' : '免费') + '</span></span></div>' +
+      '<div class="tpl-body"><div class="r1"><span class="nm">' + t.name + '</span><span class="use">' + (t.vip ? '1286 人使用' : '3521 人使用') + '</span></div>' +
+      '<div class="acts"><button class="btn sm" onclick="previewTpl(\'' + t.id + '\')">预览</button>' +
+      '<button class="btn sm ' + (t.vip ? 'gold' : 'primary') + '" onclick="useTpl(\'' + t.id + '\')">使用此模板</button></div></div></div>';
+  }).join('');
+}
+function previewTpl(id) { alert('模板详情页（F10）：大图预览 + 内页图。原型中以卡片缩略图代替。'); }
+function useTpl(id) {
+  const t = TEMPLATES.find(x => x.id === id);
+  if (t.vip && !member.active) { alert('VIP 模板需要开通会员（F28 权益校验）。先去会员定价页体验购买流程。'); go('v-price'); return; }
+  switchTpl(id);
+  go('v-editor');
+}
+function miniPageHTML(t) {
+  const s = state.basic;
+  return '<div style="font-weight:800;font-size:8px;color:' + t.color + '">' + (s.name || '姓名') + '</div>' +
+    '<div style="font-size:6px;color:#999">' + (s.job || '求职意向') + '</div>' +
+    '<div style="height:1px;background:' + t.color + ';margin:3px 0"></div>' +
+    '<div style="color:#bbb;font-size:6px;line-height:1.6">教育经历<br>工作经历<br>项目经验</div>' +
+    '<div style="height:1px;background:' + t.color + ';margin:3px 0"></div>' +
+    '<div style="color:#bbb;font-size:6px">技能：' + state.skills.slice(0, 3).join(' · ') + '</div>';
+}
+renderTplGrid();
+
+/* ============ 编辑器 ============ */
+function switchTpl(id) {
+  curTpl = TEMPLATES.find(t => t.id === id) || TEMPLATES[0];
+  document.getElementById('ed-title').textContent = '我的简历-' + curTpl.name;
+  document.getElementById('ed-tpl-tag').textContent = curTpl.vip ? 'VIP' : '免费';
+  document.getElementById('ed-tpl-tag').className = 'badge ' + (curTpl.vip ? 'b-vip' : 'b-free');
+  renderA4();
+}
+function initTplSelect() {
+  document.getElementById('tpl-select').innerHTML = TEMPLATES.map(t =>
+    '<option value="' + t.id + '"' + (t.id === curTpl.id ? ' selected' : '') + '>' + t.name + (t.vip ? '（VIP）' : '') + '</option>').join('');
+}
+initTplSelect();
+
+function renderPanel() {
+  const p = document.getElementById('ed-panel');
+  const b = state.basic;
+  if (curTab === 'basic') {
+    p.innerHTML =
+      '<div class="fld"><label>姓名</label><input data-k="basic.name" value="' + esc(b.name) + '"></div>' +
+      '<div class="fld"><label>求职意向</label><input data-k="basic.job" value="' + esc(b.job) + '"></div>' +
+      '<div class="fld"><label>电话</label><input data-k="basic.phone" value="' + esc(b.phone) + '"></div>' +
+      '<div class="fld"><label>邮箱</label><input data-k="basic.email" value="' + esc(b.email) + '"></div>' +
+      '<div class="fld"><label>所在城市</label><input data-k="basic.city" value="' + esc(b.city) + '"></div>' +
+      '<div class="fld"><label>个人简介</label><textarea data-k="basic.intro">' + esc(b.intro) + '</textarea></div>';
+  } else if (curTab === 'edu') {
+    p.innerHTML = '<div class="fld"><label>教育经历（时间倒序展示）</label></div>' +
+      state.edu.map((e, i) =>
+        '<div class="entry"><div class="e-head"><span class="t">教育 ' + (i + 1) + '</span><button class="del" data-del="edu.' + i + '">删除</button></div>' +
+        '<div class="fld"><label>学校</label><input data-k="edu.' + i + '.school" value="' + esc(e.school) + '"></div>' +
+        '<div class="fld"><label>专业</label><input data-k="edu.' + i + '.major" value="' + esc(e.major) + '"></div>' +
+        '<div style="display:flex;gap:8px"><div class="fld" style="flex:1"><label>学历</label><input data-k="edu.' + i + '.degree" value="' + esc(e.degree) + '"></div>' +
+        '<div class="fld" style="flex:1"><label>开始</label><input data-k="edu.' + i + '.start" value="' + esc(e.start) + '"></div>' +
+        '<div class="fld" style="flex:1"><label>结束</label><input data-k="edu.' + i + '.end" value="' + esc(e.end) + '"></div></div></div>').join('') +
+      '<button class="add-btn" data-add="edu">+ 添加教育经历</button>';
+  } else if (curTab === 'work') {
+    p.innerHTML = '<div class="fld"><label>工作经历（支持拖拽排序）</label></div>' +
+      state.work.map((w, i) =>
+        '<div class="entry"><div class="e-head"><span class="t">工作 ' + (i + 1) + '</span><button class="del" data-del="work.' + i + '">删除</button></div>' +
+        '<div style="display:flex;gap:8px"><div class="fld" style="flex:2"><label>公司</label><input data-k="work.' + i + '.company" value="' + esc(w.company) + '"></div>' +
+        '<div class="fld" style="flex:1.4"><label>职位</label><input data-k="work.' + i + '.role" value="' + esc(w.role) + '"></div></div>' +
+        '<div style="display:flex;gap:8px"><div class="fld" style="flex:1"><label>开始</label><input data-k="work.' + i + '.start" value="' + esc(w.start) + '"></div>' +
+        '<div class="fld" style="flex:1"><label>结束</label><input data-k="work.' + i + '.end" value="' + esc(w.end) + '"></div></div>' +
+        '<div class="fld"><label>职责描述（每条一行）</label><textarea data-k="work.' + i + '.desc">' + esc(w.desc) + '</textarea></div></div>').join('') +
+      '<button class="add-btn" data-add="work">+ 添加工作经历</button>';
+  } else if (curTab === 'proj') {
+    p.innerHTML = '<div class="fld"><label>项目经验</label></div>' +
+      state.proj.map((pr, i) =>
+        '<div class="entry"><div class="e-head"><span class="t">项目 ' + (i + 1) + '</span><button class="del" data-del="proj.' + i + '">删除</button></div>' +
+        '<div style="display:flex;gap:8px"><div class="fld" style="flex:1.4"><label>项目名称</label><input data-k="proj.' + i + '.name" value="' + esc(pr.name) + '"></div>' +
+        '<div class="fld" style="flex:1"><label>担任角色</label><input data-k="proj.' + i + '.role" value="' + esc(pr.role) + '"></div></div>' +
+        '<div class="fld"><label>项目描述</label><textarea data-k="proj.' + i + '.desc">' + esc(pr.desc) + '</textarea></div></div>').join('') +
+      '<button class="add-btn" data-add="proj">+ 添加项目经验</button>';
+  } else {
+    p.innerHTML = '<div class="fld"><label>技能标签（点击 × 删除）</label></div>' +
+      '<div class="tags">' + state.skills.map((s, i) => '<span class="tag-chip">' + esc(s) + '<span class="x" data-delskill="' + i + '">×</span></span>').join('') + '</div>' +
+      '<div class="fld"><label>添加技能（回车确认）</label><input id="skill-input" placeholder="输入技能名称后回车" onkeydown="if(event.key===\'Enter\')addSkill(this.value)"></div>';
+  }
+}
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function getByPath(path) { return path.split('.').reduce((o, k) => o[k], state); }
+function setByPath(path, v) {
+  const ks = path.split('.');
+  let o = state;
+  for (let i = 0; i < ks.length - 1; i++) o = o[ks[i]];
+  o[ks[ks.length - 1]] = v;
+}
+function renderA4() {
+  const a4 = document.getElementById('a4');
+  const b = state.basic, t = curTpl;
+  const headbar = t.head;
+  const headHtml = headbar
+    ? '<div class="rb-headbar" style="background:' + t.color + '"><div class="rb-name">' + esc(b.name || '您的姓名') + '</div><div class="rb-job">' + esc(b.job || '求职意向') + '</div><div class="rb-contact">' + contactHtml(b, true) + '</div></div>'
+    : '<div class="rb-name" style="color:' + t.color + '">' + esc(b.name || '您的姓名') + '</div><div class="rb-job">' + esc(b.job || '求职意向') + '</div><div class="rb-contact">' + contactHtml(b, false) + '</div>';
+  const secs = [
+    { t: '教育经历', html: state.edu.length ? state.edu.map(e => itemHtml(e.school + ' · ' + e.major, e.start + ' - ' + e.end, e.degree)).join('') : emptyItem() },
+    { t: '工作经历', html: state.work.length ? state.work.map(w => itemHtml(w.company + ' · ' + w.role, w.start + ' - ' + w.end, w.desc)).join('') : emptyItem() },
+    { t: '项目经验', html: state.proj.length ? state.proj.map(p => itemHtml(p.name, p.role, p.desc)).join('') : emptyItem() },
+  ].map(s => '<div class="rb-sec"><div class="rb-sec-t" style="color:' + t.color + '">' + s.t + '</div>' + s.html + '</div>').join('');
+  const skills = state.skills.length
+    ? '<div class="rb-skills">' + state.skills.map(s => '<span class="rb-skill" style="background:' + t.color + '1a;color:' + t.color + '">' + esc(s) + '</span>').join('') + '</div>'
+    : emptyItem();
+  a4.innerHTML = headHtml +
+    '<div class="rb-sec"><div class="rb-sec-t" style="color:' + t.color + '">个人简介</div><div class="rb-intro">' + esc(b.intro || '点击左侧表单开始填写…').replace(/\n/g, '<br>') + '</div></div>' +
+    secs +
+    '<div class="rb-sec"><div class="rb-sec-t" style="color:' + t.color + '">技能</div>' + skills + '</div>';
+  a4.style.width = Math.round(595 * zoomV / 100) + 'px';
+  a4.style.minHeight = Math.round(842 * zoomV / 100) + 'px';
+  a4.style.padding = Math.round(40 * zoomV / 100) + 'px ' + Math.round(42 * zoomV / 100) + 'px';
+}
+function contactHtml(b, onHead) {
+  const items = [b.phone ? '📱 ' + esc(b.phone) : '', b.email ? '✉ ' + esc(b.email) : '', b.city ? '📍 ' + esc(b.city) : ''].filter(Boolean);
+  return items.map(x => '<span>' + x + '</span>').join('');
+}
+function itemHtml(l1, dt, l2) {
+  return '<div class="rb-item"><div class="l1"><b>' + esc(l1) + '</b><span class="dt">' + esc(dt) + '</span></div><div class="l2">' + esc(l2).replace(/\n/g, '<br>') + '</div></div>';
+}
+function emptyItem() { return '<i class="empty-tip">（未填写）</i>'; }
+
+/* 编辑器事件 */
+document.getElementById('ed-tabs').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  curTab = btn.dataset.t;
+  document.querySelectorAll('#ed-tabs button').forEach(b => b.classList.toggle('on', b === btn));
+  renderPanel();
+});
+document.getElementById('ed-panel').addEventListener('input', e => {
+  const k = e.target.dataset.k;
+  if (!k) return;
+  setByPath(k, e.target.value);
+  renderA4();
+  markSaving();
+});
+document.getElementById('ed-panel').addEventListener('click', e => {
+  const del = e.target.closest('[data-del]');
+  if (del) {
+    const [arr, idx] = del.dataset.del.split('.');
+    state[arr].splice(+idx, 1);
+    renderPanel(); renderA4(); markSaving();
+    return;
+  }
+  const ds = e.target.closest('[data-delskill]');
+  if (ds) {
+    state.skills.splice(+ds.dataset.delskill, 1);
+    renderPanel(); renderA4(); markSaving();
+    return;
+  }
+  const add = e.target.closest('[data-add]');
+  if (add) {
+    if (add.dataset.add === 'edu') state.edu.push({ school: '', major: '', degree: '本科', start: '', end: '' });
+    if (add.dataset.add === 'work') state.work.push({ company: '', role: '', start: '', end: '', desc: '' });
+    if (add.dataset.add === 'proj') state.proj.push({ name: '', role: '', desc: '' });
+    renderPanel(); renderA4(); markSaving();
+  }
+});
+function addSkill(v) {
+  v = (v || '').trim();
+  if (!v) return;
+  state.skills.push(v);
+  document.getElementById('skill-input').value = '';
+  renderPanel(); renderA4(); markSaving();
+}
+let saveTimer = null;
+function markSaving() {
+  const el = document.getElementById('save-st');
+  el.textContent = '保存中…';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    const d = new Date();
+    el.textContent = '已保存 ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }, 800);
+}
+function zoom(d) {
+  zoomV = Math.min(130, Math.max(60, zoomV + d));
+  document.getElementById('zoom-v').textContent = zoomV + '%';
+  renderA4();
+}
+renderPanel();
+renderA4();
+
+/* ============ 导出弹窗 ============ */
+function openExport() {
+  const stage = document.getElementById('pdf-stage');
+  stage.innerHTML = '<div class="spin"><div class="spinner"></div>正在生成 PDF（react-pdf 渲染）…</div>';
+  document.getElementById('dl-btn').disabled = true;
+  document.getElementById('export-mask').classList.add('on');
+  document.getElementById('quota-tip').textContent = member.active ? '会员：不限导出次数' : '免费用户：今天剩余 ' + (1 - (exportCount >= 1 ? 1 : 0)) + ' 次导出';
+  setTimeout(() => {
+    stage.innerHTML = '<div class="pdf-mini">' + miniPageHTML(curTpl) + '</div>';
+    document.getElementById('dl-btn').disabled = false;
+  }, 1100);
+}
+function closeExport() { document.getElementById('export-mask').classList.remove('on'); }
+function doDownload() {
+  exportCount++;
+  alert('原型演示：实际项目中此处触发 PDF 下载（文件名：' + state.basic.name + '-' + state.basic.job + '.pdf）。\n导出记录已写入 export_logs（F22）。');
+  closeExport();
+  document.getElementById('quota-tip').textContent = member.active ? '会员：不限导出次数' : '免费用户：今天剩余 ' + Math.max(0, 1 - exportCount) + ' 次导出';
+  const rows = document.getElementById('export-rows');
+  const d = new Date();
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td>' + d.toLocaleDateString() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + '</td><td>' + esc(state.basic.name) + '-' + esc(state.basic.job) + '</td><td>' + curTpl.name + '</td><td><span class="badge b-paid">成功</span></td>';
+  rows.prepend(tr);
+}
+
+/* ============ 会员与支付 ============ */
+let pendingOrder = null;
+function buy(amountFen, planName) {
+  pendingOrder = { no: 'RC20261104-' + Math.floor(1000 + Math.random() * 9000), amountFen, planName, status: 'CREATED' };
+  document.getElementById('pay-no').textContent = pendingOrder.no;
+  document.getElementById('pay-item').textContent = planName + (planName === '年度会员' ? '（365 天）' : '（30 天）');
+  document.getElementById('pay-amt').textContent = '¥' + (amountFen / 100).toFixed(2);
+  go('v-pay');
+  renderPayStatus();
+}
+function mockPay(ok) {
+  if (!pendingOrder) return;
+  if (!ok) {
+    alert('模拟支付失败：订单保持 CREATED，15 分钟后自动过期（F25 定时任务）。');
+    return;
+  }
+  pendingOrder.status = 'PAID';
+  const days = pendingOrder.planName === '年度会员' ? 365 : 30;
+  const now = new Date();
+  const base = member.expireAt && member.expireAt > now ? member.expireAt : now;
+  member.expireAt = new Date(base.getTime() + days * 86400000);
+  member.active = true;
+  renderPayStatus();
+  syncVipFlag();
+  setTimeout(() => {
+    alert('回调处理完成（F27）：验签通过 → 订单 CREATED→PAID（幂等）→ 会员到期时间续期叠加 → payment_logs 落库。\n重复回调不会重复开通。');
+    go('v-me');
+  }, 600);
+}
+function renderPayStatus() {
+  const card = document.getElementById('pay-card');
+  if (!pendingOrder || pendingOrder.status !== 'PAID') return;
+  card.innerHTML =
+    '<div class="pay-ok"><div class="big">✅</div><div class="ok-t">支付成功</div><div class="ok-s">订单 ' + pendingOrder.no + ' 已支付 ¥' + (pendingOrder.amountFen / 100).toFixed(2) + '<br>会员有效期至 ' + member.expireAt.toLocaleDateString() + '（续期叠加）</div>' +
+    '<button class="btn primary" onclick="go(\'v-me\')">查看会员状态</button> <button class="btn" onclick="go(\'v-tpl\')">去用 VIP 模板</button></div>';
+}
+function syncVipFlag() {
+  const flag = document.getElementById('vip-flag');
+  flag.textContent = member.active ? '会员 · ' + member.expireAt.toLocaleDateString() + ' 到期' : '未开通会员';
+  flag.classList.toggle('on', member.active);
+  const st = document.getElementById('mb-state');
+  st.textContent = member.active ? '年度会员' : '未开通会员';
+  st.className = 'mb-state ' + (member.active ? 'yes' : 'no');
+  document.getElementById('mb-until').textContent = member.active ? '有效期至 ' + member.expireAt.toLocaleDateString() + ' · 权益即时生效' : '开通后可解锁 VIP 模板、无限导出';
+}
+function vipHint() {
+  if (!member.active) setTimeout(() => alert('提示：未开通会员。VIP 模板不可用（F28 权益校验）。可去"会员定价"页体验购买流程。'), 400);
+}
+</script>
+</body>
+</html>

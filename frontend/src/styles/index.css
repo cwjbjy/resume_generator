@@ -1,0 +1,11 @@
+@import 'tailwindcss';
+@import './global.css';
+@import './layout.css';
+@import './templates.css';
+@import './resume.css';
+@import './auth.css';
+@import './membership.css';
+@import './workspace.css';
+@import './editor.css';
+@import './pdf.css';
+@import './responsive.css';

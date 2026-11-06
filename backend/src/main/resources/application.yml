@@ -1,0 +1,31 @@
+spring:
+  profiles:
+    default: dev
+  jackson:
+    default-property-inclusion: non_null
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
+  flyway:
+    locations: classpath:db/migration/{vendor}
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+server:
+  port: 8080
+  error:
+    include-message: never
+app:
+  jwt-secret: ${JWT_SECRET:}
+  payment-secret: ${PAYMENT_SECRET:}
+  jwt-hours: 2
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
