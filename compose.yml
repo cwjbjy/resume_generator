@@ -37,7 +37,6 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
       MANAGEMENT_HEALTH_REDIS_ENABLED: "true"
-      APP_REDIS_ENABLED: "true"
       JWT_SECRET: ${JWT_SECRET:?Run init-env.ps1 first}
       PAYMENT_SECRET: ${PAYMENT_SECRET:?Run init-env.ps1 first}
       TZ: Asia/Shanghai

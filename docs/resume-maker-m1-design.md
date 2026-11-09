@@ -80,101 +80,7 @@
 - **D3 会员到期用 `member_expire_at` 时间戳**：续费 = `MAX(now, 当前到期时间) + 天数`，同一时刻只可能有一个值，无需状态机。
 - **D4 主键统一数据库自增**：7 张表全部 `AUTO_INCREMENT`，实体只写 `@TableId`（走全局 `id-type: auto`），种子脚本不写死 ID，初始编号由插入顺序决定。禁止 `IdType.INPUT` 手工指定主键：配置表一旦写死 ID，后续新增模板/套餐就得手工避让编号，容易撞号。修改已执行过的迁移脚本会使 Flyway checksum 校验失败，需重建数据卷（`docker compose down -v`）后再启动。
 
-### 3.1 字段用法详解
-
-#### users（账号）
-
-| 字段               | 类型/约束                   | 用法                                                                                           |
-| ------------------ | --------------------------- | ---------------------------------------------------------------------------------------------- |
-| `id`               | BIGINT PK 自增              | 用户唯一标识；JWT 的 `sub`；所有业务表的 `user_id` 外键                                        |
-| `username`         | VARCHAR(32) NOT NULL UNIQUE | 登录名。注册时先查重（409「用户名已被使用」），登录时按它查人                                  |
-| `password_hash`    | VARCHAR(100) NOT NULL       | BCrypt 哈希（60 字符，留扩容余量）。实体标 `@JsonIgnore`，任何接口都不返回                     |
-| `email`            | VARCHAR(120)                | 注册可选字段，资料页可修改（`PUT /api/users/me`）                                              |
-| `nickname`         | VARCHAR(50)                 | 展示昵称，注册时默认等于 username                                                              |
-| `avatar_url`       | VARCHAR(500)                | 头像预留字段，P1 上传功能未实现                                                                |
-| `member_expire_at` | TIMESTAMP NULL              | 会员到期时间。NULL 表示从未开通；`isMember()` = `!= null && > now()`，每次实时判定，不写入 JWT |
-| `created_at`       | TIMESTAMP NOT NULL          | 注册时间，默认当前时间                                                                         |
-
-#### templates（模板元数据）
-
-| 字段         | 类型/约束                      | 用法                                                                             |
-| ------------ | ------------------------------ | -------------------------------------------------------------------------------- |
-| `id`         | BIGINT PK 自增                 | 模板主键；`resumes.template_id` 外键；前端通过 `GET /api/templates` 获取，不写死 |
-| `name`       | VARCHAR(50) NOT NULL           | 模板名；新建简历的默认标题为「我的简历-{name}」                                  |
-| `category`   | VARCHAR(30) NOT NULL           | 分类（通用/职场/校招），列表页筛选与展示                                         |
-| `is_vip`     | BOOLEAN NOT NULL DEFAULT FALSE | 会员专享标记；`checkAccess` 据此对非会员返回 403                                 |
-| `color`      | VARCHAR(20)                    | 主题色；HTML 预览写入 CSS 变量，PDF 作为标题/边框颜色                            |
-| `style`      | VARCHAR(30)                    | 渲染风格 key（modern/classic/fresh/mono）；前端 class 名与 PDF 分支判断都依赖它  |
-| `sort`       | INT NOT NULL                   | 列表排序（升序）                                                                 |
-| `used_count` | INT NOT NULL DEFAULT 0         | 使用次数，创建简历时 `used_count = used_count + 1` 原子自增，用于热度展示        |
-
-#### resumes（简历）
-
-| 字段          | 类型/约束                            | 用法                                                                                                                                                                   |
-| ------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`          | BIGINT PK 自增                       | 简历主键，导出/复制接口的路径参数                                                                                                                                      |
-| `user_id`     | BIGINT NOT NULL, FK users            | 所有者。列表按它过滤；详情/保存/删除/复制都校验本人，否则 403                                                                                                          |
-| `template_id` | BIGINT NOT NULL, FK templates        | 当前模板。换模板只改这一列，content 不动；切换时校验 VIP 权限                                                                                                          |
-| `title`       | VARCHAR(100) NOT NULL                | 简历标题；支持重命名，复制时追加「-副本」（正文截断到 90 字符留后缀空间）                                                                                              |
-| `content`     | JSON NOT NULL                        | 整份简历文档：basic、edu、work、proj、skills、custom。服务端 `ResumeContentValidator` 校验：对象、≤200KB、basic 必填、电话格式、每模块 ≤100 条、结束时间不早于开始时间 |
-| `version`     | INT NOT NULL DEFAULT 0               | 乐观锁版本号。保存时 `WHERE id=? AND user_id=? AND version=?`，命中 0 行返回 409，成功后 +1                                                                            |
-| `status`      | VARCHAR(20) NOT NULL DEFAULT 'DRAFT' | 当前只用 DRAFT，为发布/分享态预留                                                                                                                                      |
-| `created_at`  | TIMESTAMP NOT NULL                   | 创建时间                                                                                                                                                               |
-| `updated_at`  | TIMESTAMP NOT NULL                   | 每次保存刷新；「我的简历」列表按它倒序（配合 `idx_resumes_user`）                                                                                                      |
-
-#### plans（套餐）
-
-| 字段            | 类型/约束            | 用法                                                                                                 |
-| --------------- | -------------------- | ---------------------------------------------------------------------------------------------------- |
-| `id`            | BIGINT PK 自增       | 套餐主键；下单接口的 `planId`                                                                        |
-| `name`          | VARCHAR(50) NOT NULL | 套餐名（月度会员/年度会员）                                                                          |
-| `price`         | INT NOT NULL         | 价格，单位分：1990 = 19.90 元，9900 = 99.00 元。**服务端唯一定价来源**，下单时快照到 `orders.amount` |
-| `duration_days` | INT NOT NULL         | 会员天数（30/365）；支付成功后按它叠加 `member_expire_at`，退款按它扣回                              |
-| `features`      | JSON NOT NULL        | 权益文案数组，原样下发给定价页渲染                                                                   |
-| `sort`          | INT NOT NULL         | 定价页卡片排序                                                                                       |
-
-#### orders（订单）
-
-| 字段             | 类型/约束                              | 用法                                                                         |
-| ---------------- | -------------------------------------- | ---------------------------------------------------------------------------- |
-| `id`             | BIGINT PK 自增                         | 订单主键                                                                     |
-| `order_no`       | VARCHAR(64) NOT NULL UNIQUE            | 业务单号 `RC + yyyyMMdd + 16 位随机`；对外展示，回调按它匹配订单             |
-| `user_id`        | BIGINT NOT NULL, FK users              | 下单人；订单详情/列表校验本人                                                |
-| `plan_id`        | BIGINT NOT NULL, FK plans              | 套餐；续期天数与退款天数都从套餐取                                           |
-| `amount`         | INT NOT NULL                           | 下单时的价格快照（分）。回调金额必须与之相等，否则 400                       |
-| `status`         | VARCHAR(20) NOT NULL DEFAULT 'CREATED' | 状态机：CREATED → PAID → REFUNDED；CREATED → EXPIRED。只允许条件 UPDATE 迁移 |
-| `channel`        | VARCHAR(20) NOT NULL DEFAULT 'MOCK'    | 支付渠道；当前只有 MOCK 演示渠道                                             |
-| `request_key`    | VARCHAR(64) NOT NULL                   | 客户端幂等键；与 `user_id` 组成唯一键，重复提交返回原订单                    |
-| `transaction_id` | VARCHAR(100) UNIQUE NULL               | 渠道流水号。重复回调时与已有值比对，不一致返回 409                           |
-| `created_at`     | TIMESTAMP NOT NULL                     | 下单时间                                                                     |
-| `paid_at`        | TIMESTAMP NULL                         | 支付成功时间，`markPaid` 时写入                                              |
-| `expired_at`     | TIMESTAMP NOT NULL                     | 过期时间 = 创建 + 15 分钟；定时任务每分钟扫描关闭，查询详情时也会懒过期      |
-
-#### payment_logs（支付审计）
-
-| 字段         | 类型/约束                  | 用法                                                                                        |
-| ------------ | -------------------------- | ------------------------------------------------------------------------------------------- |
-| `id`         | BIGINT PK 自增             | 日志主键                                                                                    |
-| `order_id`   | BIGINT NOT NULL, FK orders | 关联订单                                                                                    |
-| `channel`    | VARCHAR(20) NOT NULL       | 渠道标识                                                                                    |
-| `raw_body`   | TEXT NOT NULL              | 回调原始报文（JSON 文本），排查对账依据                                                     |
-| `result`     | VARCHAR(30) NOT NULL       | 处理结果：SUCCESS / FAILED / DUPLICATE / REFUNDED。区分「没收到回调」与「收到但被幂等拦下」 |
-| `created_at` | TIMESTAMP NOT NULL         | 处理时间，审计时序                                                                          |
-
-> 该表只插入不更新，不参与任何业务判断。
-
-#### export_logs（导出）
-
-| 字段          | 类型/约束                 | 用法                                                                                                     |
-| ------------- | ------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `id`          | BIGINT PK 自增            | 导出任务 ID，前端预留后回报 `complete` 时使用                                                            |
-| `user_id`     | BIGINT NOT NULL, FK users | 导出用户，每日额度按它统计                                                                               |
-| `resume_id`   | BIGINT NOT NULL           | 被导出的简历；**不建外键**，简历删除后历史仍保留                                                         |
-| `template_id` | BIGINT NOT NULL           | 导出时的模板快照；简历事后换模板不影响历史统计                                                           |
-| `status`      | VARCHAR(20) NOT NULL      | PENDING（预留中）→ COMPLETED / FAILED。额度只统计 PENDING + COMPLETED；PENDING 超 10 分钟被回收为 FAILED |
-| `created_at`  | TIMESTAMP NOT NULL        | 自然日额度判定基准（`>= 今天 0 点`），也是 10 分钟回收的依据                                             |
-
-### 3.2 索引与唯一约束
+### 3.1 索引与唯一约束
 
 | 名称                           | 定义                          | 服务的查询               |
 | ------------------------------ | ----------------------------- | ------------------------ |
@@ -186,7 +92,7 @@
 | `idx_orders_expiry`            | (status, expired_at)          | 定时任务批量关闭过期订单 |
 | `idx_export_quota`             | (user_id, created_at, status) | 免费用户每日额度统计     |
 
-### 3.3 表关系图
+### 3.2 表关系图
 
 ```mermaid
 erDiagram
@@ -215,7 +121,7 @@ erDiagram
 
 > 只有 `export_logs.user_id` 建了外键，`resume_id` 与 `template_id` 故意不建外键：避免删除简历/模板时历史导出记录被级联删除，同时保留「导出当时用的是哪份简历、哪个模板」的事实快照。图中这两条线表示逻辑引用，不是数据库外键约束。
 
-### 3.4 枚举取值
+### 3.3 枚举取值
 
 | 列                    | 取值                                    | 迁移规则                                                                    |
 | --------------------- | --------------------------------------- | --------------------------------------------------------------------------- |
@@ -531,3 +437,5 @@ F01-04   F05-08    F09-10    F11-19       F20-23     F24-29     F30-33
 - AI 一键生成简历（对话式）
 - 简历与 JD 匹配度分析（RAG + 打分）
 - 导出后 AI 优化建议
+- 登录限流处理
+- 登录互踢

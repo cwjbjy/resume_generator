@@ -14,7 +14,7 @@
    ▼
 Spring Boot 8080 ── MyBatis-Plus ── MySQL 8.0（7 张业务表 + Flyway 历史表）
    │                                  │
-   └── Redis 7（仅导出 2 秒防连点）    └── 用户行锁 / 订单行锁 / 条件 UPDATE
+   └── Redis 7（后续功能预留）         └── 用户行锁 / 订单行锁 / 条件 UPDATE
 前端 PDF：@react-pdf/renderer 在浏览器生成 Blob → pdfjs-dist 逐页渲染预览
 ```
 
@@ -176,7 +176,7 @@ export function sections(content) { ... }   // 唯一的「模块顺序 + 结构
 
 ---
 
-## 4. 导出：react-pdf 分页与中文字体 · 导出次数限流（Redis + 每日重置）
+## 4. 导出与并发控制 · react-pdf 分页、中文字体、数据库状态与每日额度
 
 ### 4.1 react-pdf 分页与中文字体
 
@@ -212,30 +212,41 @@ const pdfText = (value = "") =>
 - 免费水印用 `<Text fixed>` 渲染在每页页脚，会员导出时整个组件不挂载；
 - 生成在浏览器完成（Blob），60 秒超时保护，`Promise.race` 兜底。
 
-### 4.2 导出次数限流（Redis + 每日重置）
+### 4.2 数据库状态防重与每日额度
 
-**核心是「两阶段预留 → 确认」+ 数据库行锁串行**（`backend/.../service/ExportService.java`）：
+`ExportService` 通过**用户行锁、`export_logs.status` 和两阶段预留 → 确认**管理导出。申请导出的事务按以下顺序执行。
 
 ```java
 @Transactional
-public ExportLog reserve(userId, resumeId) {
-  User user = userMapper.lock(userId);          // ① 用户行锁，串行化同用户并发
-  ...
-  releaseExpiredReservations(userId);           // ② 回收 10 分钟失联的 PENDING
-  if (!user.isMember()) checkDailyQuota(userId); // ③ 免费用户当日额度
-  checkRepeatedClick(userId);                    // ④ Redis 2 秒防连点
-  exportLogMapper.insert(PENDING);               // ⑤ 预留
+public ExportLog reserve(Long userId, Long resumeId) {
+  User user = userMapper.lock(userId);
+  Resume resume = resumeService.owned(userId, resumeId);
+  templateService.checkAccess(userId, resume.templateId);
+  releaseExpiredReservations(userId);
+  checkPendingExport(userId);
+  if (!user.isMember()) {
+    checkDailyQuota(userId);
+  }
+
+  ExportLog log = new ExportLog();
+  log.userId = userId;
+  log.resumeId = resumeId;
+  log.templateId = resume.templateId;
+  log.status = "PENDING";
+  log.createdAt = LocalDateTime.now();
+  exportLogMapper.insert(log);
+  return log;
 }
 ```
 
-逐层拆解：
+1. **同一用户的申请由行锁串行化**。`userMapper.lock` 执行 `SELECT * FROM users WHERE id = ? FOR UPDATE`，状态检查、额度检查和新建预留处于同一事务。后一个请求取得锁后，才能检查前一个事务已提交的导出状态。
+2. **`PENDING` 表示该用户有导出任务正在生成**。`checkPendingExport` 按 `user_id` 查询 `export_logs` 中的 `PENDING` 记录，有记录就返回 `409 已有导出任务正在生成，请稍后重试`。规则覆盖免费用户、会员以及同一用户的不同简历。不同用户分别锁定自己的用户行并查询自己的任务。
+3. **锁只覆盖申请和确认的短事务**。申请事务提交后释放行锁，浏览器继续生成 PDF，此时数据库中的 `PENDING` 记录表示任务占用。确认接口 `finish` 再开启事务并锁定用户行，按具体 `exportId` 更新状态。
+4. **免费额度按自然日统计**。`checkDailyQuota` 统计 `created_at >= LocalDate.now().atStartOfDay()` 且状态为 `PENDING/COMPLETED` 的记录数，免费用户每天最多 1 次，额度用完返回 403。服务器采用 `Asia/Shanghai` 时区，进入下一自然日后查询自动使用新的起始时间。
+5. **完成、失败和超时分别处理**。前端调用 `/exports/{id}/complete` 确认结果，成功在有效期内将 `PENDING → COMPLETED`，失败将 `PENDING → FAILED`。超过 10 分钟的失联 `PENDING` 在下次申请时回收为 `FAILED`。`finish` 使用 `WHERE id = ? AND status = 'PENDING'` 条件更新，已进入终态的任务返回已有状态，旧任务的回调只关联自己的 `exportId`。
+6. **会员仍遵守单任务约束**。会员跳过每日额度校验，但同一时间也只能有一个有效的 `PENDING` 导出。任务完成或失败后可以立即再次申请。免费用户失败后可以重试，成功后仍受当日额度约束。
 
-1. **`userMapper.lock`**：`SELECT * FROM users WHERE id = ? FOR UPDATE`。同一用户的并发导出在数据库层面排队，额度检查和预留是串行的，不会两个请求同时看到「还有 1 次额度」；
-2. **每日重置**：`checkDailyQuota` 统计 `created_at >= LocalDate.now().atStartOfDay()` 且状态为 `PENDING/COMPLETED` 的记录数，免费用户 `< 1`，即每天 1 次，按**服务器时区（Asia/Shanghai）自然日**重置。用数据库日志计数而不是计数器变量，天然抗重启、可审计；
-3. **失联回收**：超过 10 分钟的 `PENDING` 在下次 `reserve` 时被置为 `FAILED`，占用额度的「僵尸预留」自动释放；
-4. **Redis 只做短时防连点**：`setIfAbsent("export:burst:userId", "1", 2s)`，2 秒内重复点击返回 429「操作太快」。Redis 挂掉时捕获 `RedisConnectionFailureException` 直接放行——**额度安全不依赖 Redis**，它只是体验层。这是有意偏离初版设计文档（「Redis 主计数 + DB 日志」）的：Redis 主计数在 Redis 故障时可能超额放行，DB 日志 + 行锁则不会；
-5. **失败释放**：前端生成失败调 `/exports/{id}/complete { success:false }`，后端把 `PENDING → FAILED`，本次不占额度（仅对 10 分钟内的预留生效）；
-6. **会员跳过额度**：`user.isMember()` 实时判断，不限次数、无水印（前端 `watermark = !isMember`）。
+当前实现复用已有的 `export_logs` 表和用户行锁，通过一次状态查询完成防重。Redis 服务、密码及连接配置作为后续功能预留，导出状态与额度统一由 MySQL 管理。
 
 ---
 
@@ -376,8 +387,8 @@ docker compose -f compose.yml -f compose.dev.yml up -d --wait mysql redis
 ### 7.3 CI 与验证
 
 - GitHub Actions：JDK 21（temurin）+ Node 22，后端 `mvn verify`（含 Spotless 格式检查、Testcontainers MySQL 集成测试），前端 `npm run check`（oxlint + oxfmt + tsc + 生产构建）+ `npm run test:pdf`（PDF 分页回归）；
-- 11 项集成测试用 **Testcontainers** 自动拉起 MySQL 8.0 临时容器（`MySqlTestConfiguration` + `@ServiceConnection` 自动注入连接参数），执行与生产相同的 Flyway 迁移，测试结束自动销毁——测试库和生产库同方言、同 DDL，杜绝「测试用 H2 全绿、线上 MySQL 炸」的经典事故；
-- 测试覆盖点（对应叙事点，可以直接背）：BCrypt/重复注册、未登录拦截、跨账号资源访问、VIP 模板校验、乐观锁 409 冲突、并发下单幂等、支付回调并发重放、验签/金额/订单过期、退款与会员续费叠加、并发导出额度、失败回收。
+- 13 项集成测试使用 **Testcontainers** 自动启动 MySQL 8.0 临时容器，由 `MySqlTestConfiguration` 和 `@ServiceConnection` 注入连接参数，执行与生产相同的 Flyway 迁移，测试结束自动销毁。另有 2 项 `DemoSeedTest` 验证演示账号初始化的 Profile 条件，共 15 项后端测试。
+- 集成测试覆盖 BCrypt/重复注册、未登录拦截、跨账号资源访问、VIP 模板校验、乐观锁 409 冲突、并发下单幂等、支付回调并发重放、验签/金额/订单过期、退款与会员续费叠加。导出测试覆盖免费额度并发校验、会员并发申请只接受一个任务、跨简历防重、失败后重试、成功后会员再次申请、超时回收、旧回调隔离和不同用户隔离。
 
 ---
 
@@ -387,7 +398,7 @@ docker compose -f compose.yml -f compose.dev.yml up -d --wait mysql redis
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
 | 为什么简历存 JSON 不拆表？     | 访问模式是整篇读写，没有跨简历内容检索；结构演进快，文档型免迁移；拆表收益为零。                                                |
 | 金额为什么用 int？             | 分做单位消除浮点误差；服务端定价 + 回调金额校验防篡改。                                                                         |
-| 并发导出怎么不超额？           | 用户行锁 `FOR UPDATE` 串行 + 数据库日志计数自然日额度，Redis 只做 2 秒防连点，挂了自动降级。                                    |
+| 并发导出怎么不超额？           | 用户行锁 `FOR UPDATE` 串行申请事务，检查 `PENDING` 防止同用户并行导出，按数据库日志校验每日免费额度。                         |
 | 并发支付回调怎么不重复加权益？ | 锁顺序统一（用户→订单）+ `WHERE status='CREATED'` 条件 UPDATE，`affected == 1` 才是闸门；重复回调走 PAID 幂等分支返回 success。 |
 | 订单怎么过期？                 | 15 分钟 `expired_at`；定时任务每分钟条件 UPDATE 批量关闭 + 查询时懒过期兜底。                                                   |
 | 会员到期立刻生效怎么保证？     | 状态不入 JWT，每次实时查库 `isMember()`，零特权窗口。                                                                           |

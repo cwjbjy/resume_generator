@@ -8,9 +8,6 @@ spring:
       host: ${REDIS_HOST:redis}
       password: ${REDIS_PASSWORD}
       timeout: 2s
-app:
-  demo-seed: false
-  redis-enabled: true
 springdoc:
   api-docs:
     enabled: false

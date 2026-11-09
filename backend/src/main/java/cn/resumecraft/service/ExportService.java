@@ -9,13 +9,9 @@ import cn.resumecraft.model.Resume;
 import cn.resumecraft.model.User;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.RedisConnectionFailureException;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,22 +21,16 @@ public class ExportService {
   private final UserMapper userMapper;
   private final ResumeService resumeService;
   private final TemplateService templateService;
-  private final StringRedisTemplate redis;
-  private final boolean redisEnabled;
 
   public ExportService(
       ExportLogMapper exportLogMapper,
       UserMapper userMapper,
       ResumeService resumeService,
-      TemplateService templateService,
-      StringRedisTemplate redis,
-      @Value("${app.redis-enabled:false}") boolean redisEnabled) {
+      TemplateService templateService) {
     this.exportLogMapper = exportLogMapper;
     this.userMapper = userMapper;
     this.resumeService = resumeService;
     this.templateService = templateService;
-    this.redis = redis;
-    this.redisEnabled = redisEnabled;
   }
 
   @Transactional
@@ -49,10 +39,10 @@ public class ExportService {
     Resume resume = resumeService.owned(userId, resumeId);
     templateService.checkAccess(userId, resume.templateId);
     releaseExpiredReservations(userId);
+    checkPendingExport(userId);
     if (!user.isMember()) {
       checkDailyQuota(userId);
     }
-    checkRepeatedClick(userId);
     ExportLog log = new ExportLog();
     log.userId = userId;
     log.resumeId = resumeId;
@@ -111,16 +101,10 @@ public class ExportService {
     require(used < 1, 403, "今日免费导出次数已用完，明天 00:00 重置；会员可不限次数导出");
   }
 
-  private void checkRepeatedClick(Long userId) {
-    if (!redisEnabled) {
-      return;
-    }
-    try {
-      Boolean acquired =
-          redis.opsForValue().setIfAbsent("export:burst:" + userId, "1", Duration.ofSeconds(2));
-      require(Boolean.TRUE.equals(acquired), 429, "操作太快，请稍后重试");
-    } catch (RedisConnectionFailureException unavailable) {
-      // Daily quota remains guarded by the database transaction and user row lock.
-    }
+  private void checkPendingExport(Long userId) {
+    long pending =
+        exportLogMapper.selectCount(
+            new QueryWrapper<ExportLog>().eq("user_id", userId).eq("status", "PENDING"));
+    require(pending == 0, 409, "已有导出任务正在生成，请稍后重试");
   }
 }
