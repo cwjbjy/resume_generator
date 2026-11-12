@@ -18,4 +18,40 @@ public class Order {
   public LocalDateTime createdAt;
   public LocalDateTime paidAt;
   public LocalDateTime expiredAt;
+
+  public Long getId() {
+    return id;
+  }
+
+  public String getOrderNo() {
+    return orderNo;
+  }
+
+  public Long getUserId() {
+    return userId;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public String getRequestKey() {
+    return requestKey;
+  }
+
+  public String getTransactionId() {
+    return transactionId;
+  }
+
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
+
+  public LocalDateTime getPaidAt() {
+    return paidAt;
+  }
+
+  public LocalDateTime getExpiredAt() {
+    return expiredAt;
+  }
 }

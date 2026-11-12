@@ -7,7 +7,7 @@ import cn.resumecraft.dto.CredentialsRequest;
 import cn.resumecraft.mapper.UserMapper;
 import cn.resumecraft.model.User;
 import cn.resumecraft.security.TokenService;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,7 +31,8 @@ public class AuthService {
   public AuthResponse register(CredentialsRequest credentials) {
     validatePasswordLength(credentials.password());
     require(
-        userMapper.selectCount(new QueryWrapper<User>().eq("username", credentials.username()))
+        userMapper.selectCount(
+                new LambdaQueryWrapper<User>().eq(User::getUsername, credentials.username()))
             == 0,
         409,
         "用户名已被使用");
@@ -48,7 +49,8 @@ public class AuthService {
   public AuthResponse login(CredentialsRequest credentials) {
     validatePasswordLength(credentials.password());
     User user =
-        userMapper.selectOne(new QueryWrapper<User>().eq("username", credentials.username()));
+        userMapper.selectOne(
+            new LambdaQueryWrapper<User>().eq(User::getUsername, credentials.username()));
     // Keep a BCrypt check on unknown usernames to avoid a timing-based distinction.
     String passwordHash = user == null ? UNKNOWN_USER_HASH : user.passwordHash;
     boolean passwordMatches = passwordEncoder.matches(credentials.password(), passwordHash);

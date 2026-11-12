@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import cn.resumecraft.model.Order;
 import cn.resumecraft.model.User;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.LocalDateTime;
@@ -56,9 +56,9 @@ class ResumeFlowTest extends ApiTestSupport {
     JsonNode r = resume(a, vipTemplateId());
     users.update(
         null,
-        new UpdateWrapper<User>()
-            .eq("id", a.id())
-            .set("member_expire_at", LocalDateTime.now().minusDays(1)));
+        new LambdaUpdateWrapper<User>()
+            .eq(User::getId, a.id())
+            .set(User::getMemberExpireAt, LocalDateTime.now().minusDays(1)));
     call("POST", "/api/exports", a, Map.of("resumeId", r.path("id").asLong()), 403);
     ObjectNode body = saveBody(r);
     body.put("templateId", freeTemplateId());

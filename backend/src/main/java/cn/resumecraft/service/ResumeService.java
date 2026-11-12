@@ -5,8 +5,8 @@ import static cn.resumecraft.api.BizException.require;
 import cn.resumecraft.dto.SaveResumeRequest;
 import cn.resumecraft.mapper.ResumeMapper;
 import cn.resumecraft.model.Resume;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -32,7 +32,9 @@ public class ResumeService {
 
   public List<Resume> list(Long userId) {
     return resumeMapper.selectList(
-        new QueryWrapper<Resume>().eq("user_id", userId).orderByDesc("updated_at"));
+        new LambdaQueryWrapper<Resume>()
+            .eq(Resume::getUserId, userId)
+            .orderByDesc(Resume::getUpdatedAt));
   }
 
   public Resume owned(Long userId, Long resumeId) {
@@ -66,15 +68,15 @@ public class ResumeService {
     int updated =
         resumeMapper.update(
             null,
-            new UpdateWrapper<Resume>()
-                .eq("id", resumeId)
-                .eq("user_id", userId)
-                .eq("version", request.version())
-                .set("title", request.title())
-                .set("template_id", request.templateId())
-                .set("content", request.content().toString())
-                .set("version", request.version() + 1)
-                .set("updated_at", LocalDateTime.now()));
+            new LambdaUpdateWrapper<Resume>()
+                .eq(Resume::getId, resumeId)
+                .eq(Resume::getUserId, userId)
+                .eq(Resume::getVersion, request.version())
+                .set(Resume::getTitle, request.title())
+                .set(Resume::getTemplateId, request.templateId())
+                .set(Resume::getContent, request.content().toString())
+                .set(Resume::getVersion, request.version() + 1)
+                .set(Resume::getUpdatedAt, LocalDateTime.now()));
     require(updated == 1, 409, "简历已在其他窗口更新，请刷新后重试；本地草稿已保留");
     return resumeMapper.selectById(resumeId);
   }

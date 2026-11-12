@@ -2,7 +2,7 @@ package cn.resumecraft.config;
 
 import cn.resumecraft.mapper.UserMapper;
 import cn.resumecraft.model.User;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.time.LocalDateTime;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
@@ -22,7 +22,9 @@ public class DemoSeed implements CommandLineRunner {
 
   public void run(String... args) {
     for (String name : new String[] {"user01", "vip01"}) {
-      if (userMapper.selectCount(new QueryWrapper<User>().eq("username", name)) > 0) continue;
+      if (userMapper.selectCount(new LambdaQueryWrapper<User>().eq(User::getUsername, name)) > 0) {
+        continue;
+      }
       User user = new User();
       user.username = name;
       user.nickname = name.equals("vip01") ? "会员体验账号" : "求职者";

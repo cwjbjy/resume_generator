@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import cn.resumecraft.api.BizException;
 import cn.resumecraft.model.ExportLog;
 import cn.resumecraft.model.Order;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,9 +58,9 @@ class ExportFlowTest extends ApiTestSupport {
     ExportLog pending = exportService.reserve(a.id(), rid);
     exports.update(
         null,
-        new UpdateWrapper<ExportLog>()
-            .eq("id", pending.id)
-            .set("created_at", LocalDateTime.now().minusMinutes(11)));
+        new LambdaUpdateWrapper<ExportLog>()
+            .eq(ExportLog::getId, pending.id)
+            .set(ExportLog::getCreatedAt, LocalDateTime.now().minusMinutes(11)));
     ExportLog next = exportService.reserve(a.id(), rid);
     assertThat(exports.selectById(pending.id).status).isEqualTo("FAILED");
     exportService.finish(a.id(), next.id, true);

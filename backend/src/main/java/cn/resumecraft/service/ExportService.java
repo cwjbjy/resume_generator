@@ -7,8 +7,8 @@ import cn.resumecraft.mapper.UserMapper;
 import cn.resumecraft.model.ExportLog;
 import cn.resumecraft.model.Resume;
 import cn.resumecraft.model.User;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -65,46 +65,48 @@ public class ExportService {
           "导出任务已超时，请重新生成");
       exportLogMapper.update(
           null,
-          new UpdateWrapper<ExportLog>()
-              .eq("id", exportId)
-              .eq("status", "PENDING")
-              .set("status", success ? "COMPLETED" : "FAILED"));
+          new LambdaUpdateWrapper<ExportLog>()
+              .eq(ExportLog::getId, exportId)
+              .eq(ExportLog::getStatus, "PENDING")
+              .set(ExportLog::getStatus, success ? "COMPLETED" : "FAILED"));
     }
     return exportLogMapper.selectById(exportId);
   }
 
   public List<ExportLog> history(Long userId) {
     return exportLogMapper.selectList(
-        new QueryWrapper<ExportLog>()
-            .eq("user_id", userId)
-            .orderByDesc("created_at")
+        new LambdaQueryWrapper<ExportLog>()
+            .eq(ExportLog::getUserId, userId)
+            .orderByDesc(ExportLog::getCreatedAt)
             .last("LIMIT 100"));
   }
 
   private void releaseExpiredReservations(Long userId) {
     exportLogMapper.update(
         null,
-        new UpdateWrapper<ExportLog>()
-            .eq("user_id", userId)
-            .eq("status", "PENDING")
-            .lt("created_at", LocalDateTime.now().minusMinutes(10))
-            .set("status", "FAILED"));
+        new LambdaUpdateWrapper<ExportLog>()
+            .eq(ExportLog::getUserId, userId)
+            .eq(ExportLog::getStatus, "PENDING")
+            .lt(ExportLog::getCreatedAt, LocalDateTime.now().minusMinutes(10))
+            .set(ExportLog::getStatus, "FAILED"));
   }
 
   private void checkDailyQuota(Long userId) {
     long used =
         exportLogMapper.selectCount(
-            new QueryWrapper<ExportLog>()
-                .eq("user_id", userId)
-                .ge("created_at", LocalDate.now().atStartOfDay())
-                .in("status", "PENDING", "COMPLETED"));
+            new LambdaQueryWrapper<ExportLog>()
+                .eq(ExportLog::getUserId, userId)
+                .ge(ExportLog::getCreatedAt, LocalDate.now().atStartOfDay())
+                .in(ExportLog::getStatus, "PENDING", "COMPLETED"));
     require(used < 1, 403, "今日免费导出次数已用完，明天 00:00 重置；会员可不限次数导出");
   }
 
   private void checkPendingExport(Long userId) {
     long pending =
         exportLogMapper.selectCount(
-            new QueryWrapper<ExportLog>().eq("user_id", userId).eq("status", "PENDING"));
+            new LambdaQueryWrapper<ExportLog>()
+                .eq(ExportLog::getUserId, userId)
+                .eq(ExportLog::getStatus, "PENDING"));
     require(pending == 0, 409, "已有导出任务正在生成，请稍后重试");
   }
 }

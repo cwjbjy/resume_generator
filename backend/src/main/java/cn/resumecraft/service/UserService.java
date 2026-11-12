@@ -6,7 +6,7 @@ import cn.resumecraft.dto.MembershipResponse;
 import cn.resumecraft.dto.UpdateProfileRequest;
 import cn.resumecraft.mapper.UserMapper;
 import cn.resumecraft.model.User;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,10 +27,10 @@ public class UserService {
     current(userId);
     userMapper.update(
         null,
-        new UpdateWrapper<User>()
-            .eq("id", userId)
-            .set("nickname", profile.nickname())
-            .set("email", profile.email()));
+        new LambdaUpdateWrapper<User>()
+            .eq(User::getId, userId)
+            .set(User::getNickname, profile.nickname())
+            .set(User::getEmail, profile.email()));
     return current(userId);
   }
 

@@ -5,8 +5,8 @@ import static cn.resumecraft.api.BizException.require;
 import cn.resumecraft.mapper.TemplateMapper;
 import cn.resumecraft.mapper.UserMapper;
 import cn.resumecraft.model.Template;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -21,14 +21,14 @@ public class TemplateService {
   }
 
   public List<Template> list(String filter) {
-    QueryWrapper<Template> query = new QueryWrapper<>();
+    LambdaQueryWrapper<Template> query = new LambdaQueryWrapper<>();
     if (filter.equals("free")) {
-      query.eq("is_vip", false);
+      query.eq(Template::getIsVip, false);
     }
     if (filter.equals("vip")) {
-      query.eq("is_vip", true);
+      query.eq(Template::getIsVip, true);
     }
-    return templateMapper.selectList(query.orderByAsc("sort"));
+    return templateMapper.selectList(query.orderByAsc(Template::getSort));
   }
 
   public Template get(Long templateId) {
@@ -45,6 +45,8 @@ public class TemplateService {
   public void recordUse(Long templateId) {
     templateMapper.update(
         null,
-        new UpdateWrapper<Template>().eq("id", templateId).setSql("used_count = used_count + 1"));
+        new LambdaUpdateWrapper<Template>()
+            .eq(Template::getId, templateId)
+            .setIncrBy(Template::getUsedCount, 1));
   }
 }

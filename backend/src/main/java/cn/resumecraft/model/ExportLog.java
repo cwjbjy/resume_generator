@@ -12,4 +12,20 @@ public class ExportLog {
   public Long templateId;
   public String status;
   public LocalDateTime createdAt;
+
+  public Long getId() {
+    return id;
+  }
+
+  public Long getUserId() {
+    return userId;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
 }

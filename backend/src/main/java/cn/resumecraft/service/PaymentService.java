@@ -8,8 +8,8 @@ import cn.resumecraft.mapper.PlanMapper;
 import cn.resumecraft.mapper.UserMapper;
 import cn.resumecraft.model.Order;
 import cn.resumecraft.model.User;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
@@ -44,7 +44,8 @@ public class PaymentService {
   public String callback(PaymentCallback callback, String signature) {
     signatureService.verify(callback, signature);
     Order found =
-        orderMapper.selectOne(new QueryWrapper<Order>().eq("order_no", callback.orderNo()));
+        orderMapper.selectOne(
+            new LambdaQueryWrapper<Order>().eq(Order::getOrderNo, callback.orderNo()));
     require(found != null, 404, "订单不存在");
     // Every membership mutation acquires the user lock before the order lock.
     User user = userMapper.lock(found.userId);
@@ -81,10 +82,10 @@ public class PaymentService {
     require(order.status.equals("PAID"), 409, "只有已支付订单可以退款");
     orderMapper.update(
         null,
-        new UpdateWrapper<Order>()
-            .eq("id", orderId)
-            .eq("status", "PAID")
-            .set("status", "REFUNDED"));
+        new LambdaUpdateWrapper<Order>()
+            .eq(Order::getId, orderId)
+            .eq(Order::getStatus, "PAID")
+            .set(Order::getStatus, "REFUNDED"));
     int days = planMapper.selectById(order.planId).durationDays;
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime expiry = user.memberExpireAt == null ? now : user.memberExpireAt.minusDays(days);
@@ -92,7 +93,10 @@ public class PaymentService {
       expiry = now;
     }
     userMapper.update(
-        null, new UpdateWrapper<User>().eq("id", userId).set("member_expire_at", expiry));
+        null,
+        new LambdaUpdateWrapper<User>()
+            .eq(User::getId, userId)
+            .set(User::getMemberExpireAt, expiry));
     paymentLogService.record(
         order, Map.of("refundOrderNo", order.orderNo, "retractedDays", days), "REFUNDED");
     return orderMapper.selectById(orderId);
@@ -102,12 +106,12 @@ public class PaymentService {
     int updated =
         orderMapper.update(
             null,
-            new UpdateWrapper<Order>()
-                .eq("id", order.id)
-                .eq("status", "CREATED")
-                .set("status", "PAID")
-                .set("paid_at", LocalDateTime.now())
-                .set("transaction_id", transactionId));
+            new LambdaUpdateWrapper<Order>()
+                .eq(Order::getId, order.id)
+                .eq(Order::getStatus, "CREATED")
+                .set(Order::getStatus, "PAID")
+                .set(Order::getPaidAt, LocalDateTime.now())
+                .set(Order::getTransactionId, transactionId));
     require(updated == 1, 409, "订单状态已改变");
   }
 
@@ -117,6 +121,8 @@ public class PaymentService {
         user.memberExpireAt != null && user.memberExpireAt.isAfter(now) ? user.memberExpireAt : now;
     userMapper.update(
         null,
-        new UpdateWrapper<User>().eq("id", user.id).set("member_expire_at", base.plusDays(days)));
+        new LambdaUpdateWrapper<User>()
+            .eq(User::getId, user.id)
+            .set(User::getMemberExpireAt, base.plusDays(days)));
   }
 }

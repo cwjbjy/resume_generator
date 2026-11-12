@@ -7,8 +7,8 @@ import cn.resumecraft.mapper.PlanMapper;
 import cn.resumecraft.mapper.UserMapper;
 import cn.resumecraft.model.Order;
 import cn.resumecraft.model.Plan;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -31,12 +31,14 @@ public class OrderService {
   }
 
   public List<Plan> plans() {
-    return planMapper.selectList(new QueryWrapper<Plan>().orderByAsc("sort"));
+    return planMapper.selectList(new LambdaQueryWrapper<Plan>().orderByAsc(Plan::getSort));
   }
 
   public List<Order> list(Long userId) {
     return orderMapper.selectList(
-        new QueryWrapper<Order>().eq("user_id", userId).orderByDesc("created_at"));
+        new LambdaQueryWrapper<Order>()
+            .eq(Order::getUserId, userId)
+            .orderByDesc(Order::getCreatedAt));
   }
 
   public Order owned(Long userId, Long orderId) {
@@ -60,7 +62,9 @@ public class OrderService {
     userMapper.lock(userId);
     Order existing =
         orderMapper.selectOne(
-            new QueryWrapper<Order>().eq("user_id", userId).eq("request_key", requestKey));
+            new LambdaQueryWrapper<Order>()
+                .eq(Order::getUserId, userId)
+                .eq(Order::getRequestKey, requestKey));
     if (existing != null) {
       return existing;
     }
@@ -86,9 +90,9 @@ public class OrderService {
   public void expire() {
     orderMapper.update(
         null,
-        new UpdateWrapper<Order>()
-            .eq("status", "CREATED")
-            .lt("expired_at", LocalDateTime.now())
-            .set("status", "EXPIRED"));
+        new LambdaUpdateWrapper<Order>()
+            .eq(Order::getStatus, "CREATED")
+            .lt(Order::getExpiredAt, LocalDateTime.now())
+            .set(Order::getStatus, "EXPIRED"));
   }
 }

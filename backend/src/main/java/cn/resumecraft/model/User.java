@@ -16,6 +16,26 @@ public class User {
   public LocalDateTime memberExpireAt;
   public LocalDateTime createdAt;
 
+  public Long getId() {
+    return id;
+  }
+
+  public String getUsername() {
+    return username;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public String getNickname() {
+    return nickname;
+  }
+
+  public LocalDateTime getMemberExpireAt() {
+    return memberExpireAt;
+  }
+
   public boolean isMember() {
     return memberExpireAt != null && memberExpireAt.isAfter(LocalDateTime.now());
   }
