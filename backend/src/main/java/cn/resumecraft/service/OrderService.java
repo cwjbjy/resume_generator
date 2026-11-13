@@ -1,12 +1,12 @@
 package cn.resumecraft.service;
 
-import static cn.resumecraft.api.BizException.require;
+import static cn.resumecraft.exception.BizException.require;
 
+import cn.resumecraft.entity.Order;
+import cn.resumecraft.entity.Plan;
 import cn.resumecraft.mapper.OrderMapper;
 import cn.resumecraft.mapper.PlanMapper;
 import cn.resumecraft.mapper.UserMapper;
-import cn.resumecraft.model.Order;
-import cn.resumecraft.model.Plan;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import java.time.LocalDate;

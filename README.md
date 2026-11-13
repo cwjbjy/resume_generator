@@ -110,3 +110,28 @@ docker compose up --build -d
 - **PDF 在浏览器生成**：适合作品集范围；下载确认仅表示浏览器已生成文件。若需防止绕过前端导出，应改为服务端生成并鉴权下载。
 - 退款仅演示状态变更与会员天数扣回，无真实资金流转。
 - 未实现：AI 能力、公开分享、密码找回、自动续费、头像上传。
+
+## 四、目录结构
+
+后端采用按职责分层的包结构，源码根目录为 `backend/src/main/java/cn/resumecraft`。
+
+```text
+cn.resumecraft
+├── controller    HTTP 接口入口
+├── service       业务逻辑
+├── mapper        数据库访问
+├── entity        数据库实体
+├── dto           请求与响应数据
+├── common        ApiResponse 统一响应
+├── exception     业务异常与全局异常处理
+├── config        Spring 配置
+├── security      JWT 认证与鉴权
+├── bootstrap     开发环境数据初始化
+└── ResumeCraftApplication.java
+```
+
+前端源码位于 `frontend/src`，按业务组织页面、组件、hooks 和接口调用。
+
+- `features/<业务>/api` 存放业务接口，`lib/http.ts` 封装共享 HTTP 客户端。
+- `features/resumes` 集中简历接口、数据模型、HTML 预览组件和 PDF 生成与预览。
+- `app` 存放应用入口及运行配置接口，`components/ui`、`components/layout` 存放共享 UI 和布局。

@@ -1,6 +1,6 @@
 import { useLockFn, useMemoizedFn, useRequest } from 'ahooks';
 import { useNavigate } from 'react-router-dom';
-import { resumeApi } from '../../../api/resumeApi';
+import { resumeApi } from '../../resumes/api/resumeApi';
 import { notify } from '../../../stores/noticeStore';
 import { useSession } from '../../../stores/sessionStore';
 import type { Template } from '../../../types';

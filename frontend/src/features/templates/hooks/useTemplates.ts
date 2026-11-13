@@ -1,8 +1,7 @@
 import { useRequest } from 'ahooks';
-import { api } from '../../../lib/http';
-import { type Template } from '../../../types/index';
+import { templateApi } from '../api/templateApi';
 export function useTemplates() {
-  return useRequest(() => api<Template[]>('GET', '/templates'), {
+  return useRequest(templateApi.list, {
     cacheKey: 'templates',
     staleTime: 60000,
     retryCount: 1,

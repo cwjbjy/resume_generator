@@ -2,15 +2,15 @@ import { useBoolean, useLatest, useLockFn, useRequest, useUnmountedRef } from 'a
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { resumeApi } from '../../../api/resumeApi';
-import { refreshUser } from '../../../api/userApi';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { ErrorBox } from '../../../components/ui/ErrorBox';
 import { Loading } from '../../../components/ui/Loading';
-import { api } from '../../../lib/http';
 import { notify } from '../../../stores/noticeStore';
 import { useSession } from '../../../stores/sessionStore';
 import type { Order, Resume } from '../../../types';
+import { membershipApi } from '../../membership/api/membershipApi';
+import { resumeApi } from '../../resumes/api/resumeApi';
+import { refreshUser, userApi } from '../../user/api/userApi';
 import { ExportHistory } from '../components/ExportHistory';
 import { OrderList } from '../components/OrderList';
 import { ProfileCard } from '../components/ProfileCard';
@@ -59,7 +59,7 @@ export function WorkspacePage() {
     runAsync(action, message).catch(() => false),
   );
   async function saveProfile(profile: ProfileInput) {
-    const succeeded = await run(() => api('PUT', '/users/me', profile), '资料已更新');
+    const succeeded = await run(() => userApi.updateProfile(profile), '资料已更新');
     if (succeeded) closeProfile();
   }
 
@@ -166,10 +166,7 @@ export function WorkspacePage() {
           busy={busy}
           onClose={() => setRefunding(null)}
           onConfirm={() =>
-            void run(
-              () => api('POST', `/orders/${refunding.id}/refund`),
-              '退款演示完成，会员权益已更新',
-            )
+            void run(() => membershipApi.refundOrder(refunding.id), '退款演示完成，会员权益已更新')
           }
         >
           确认对订单 {refunding.orderNo} 进行沙箱退款？该订单对应的会员天数将被扣回。

@@ -1,6 +1,6 @@
 package cn.resumecraft.mapper;
 
-import cn.resumecraft.model.User;
+import cn.resumecraft.entity.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;

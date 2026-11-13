@@ -2,8 +2,8 @@ package cn.resumecraft;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import cn.resumecraft.model.Order;
-import cn.resumecraft.model.User;
+import cn.resumecraft.entity.Order;
+import cn.resumecraft.entity.User;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;

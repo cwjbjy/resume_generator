@@ -1,6 +1,6 @@
 import { useRequest } from 'ahooks';
 import { useParams } from 'react-router-dom';
-import { resumeApi } from '../../../api/resumeApi';
+import { resumeApi } from '../../resumes/api/resumeApi';
 import { ErrorBox } from '../../../components/ui/ErrorBox';
 import { Loading } from '../../../components/ui/Loading';
 import { ResumeEditor } from '../components/ResumeEditor';

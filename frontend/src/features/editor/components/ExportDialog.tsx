@@ -1,6 +1,6 @@
 import { Check, Download } from 'lucide-react';
 import { Modal } from '../../../components/ui/Modal';
-import PdfViewer from '../../pdf/PdfViewer';
+import PdfViewer from '../../resumes/pdf/PdfViewer';
 
 export function ExportDialog({
   url,

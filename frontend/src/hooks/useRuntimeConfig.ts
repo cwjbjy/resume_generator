@@ -1,7 +1,7 @@
 import { useRequest } from 'ahooks';
-import { api } from '../lib/http';
+import { runtimeConfigApi } from '../app/api/runtimeConfigApi';
 export function useRuntimeConfig() {
-  return useRequest(() => api<{ mockEnabled: boolean }>('GET', '/config'), {
+  return useRequest(runtimeConfigApi.get, {
     cacheKey: 'config',
     retryCount: 1,
   });

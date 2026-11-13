@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react';
-import { ResumePreview } from '../../../components/resume/ResumePreview';
+import { ResumePreview } from '../../resumes/components/ResumePreview';
 import { Modal } from '../../../components/ui/Modal';
 import type { Content, Template } from '../../../types';
 

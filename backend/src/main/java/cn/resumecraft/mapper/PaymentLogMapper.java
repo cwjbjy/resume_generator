@@ -1,6 +1,6 @@
 package cn.resumecraft.mapper;
 
-import cn.resumecraft.model.PaymentLog;
+import cn.resumecraft.entity.PaymentLog;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 

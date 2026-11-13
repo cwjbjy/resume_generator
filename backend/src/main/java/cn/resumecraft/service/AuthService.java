@@ -1,11 +1,11 @@
 package cn.resumecraft.service;
 
-import static cn.resumecraft.api.BizException.require;
+import static cn.resumecraft.exception.BizException.require;
 
 import cn.resumecraft.dto.AuthResponse;
 import cn.resumecraft.dto.CredentialsRequest;
+import cn.resumecraft.entity.User;
 import cn.resumecraft.mapper.UserMapper;
-import cn.resumecraft.model.User;
 import cn.resumecraft.security.TokenService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.nio.charset.StandardCharsets;

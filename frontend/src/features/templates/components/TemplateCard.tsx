@@ -1,5 +1,5 @@
 import { ArrowUpRight, Crown, FileText } from 'lucide-react';
-import { ResumePreview } from '../../../components/resume/ResumePreview';
+import { ResumePreview } from '../../resumes/components/ResumePreview';
 import { sample } from '../../../data/sampleResume';
 import type { Template } from '../../../types';
 

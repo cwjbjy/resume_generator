@@ -1,6 +1,6 @@
 package cn.resumecraft.service;
 
-import static cn.resumecraft.api.BizException.require;
+import static cn.resumecraft.exception.BizException.require;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Component;

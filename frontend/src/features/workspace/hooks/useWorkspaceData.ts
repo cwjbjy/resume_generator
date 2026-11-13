@@ -1,18 +1,18 @@
 import { useRequest } from 'ahooks';
-import { resumeApi } from '../../../api/resumeApi';
 import { useRuntimeConfig } from '../../../hooks/useRuntimeConfig';
-import { api } from '../../../lib/http';
-import type { ExportLog, Order } from '../../../types';
+import { membershipApi } from '../../membership/api/membershipApi';
+import { exportApi } from '../../resumes/api/exportApi';
+import { resumeApi } from '../../resumes/api/resumeApi';
 import { useTemplates } from '../../templates/hooks/useTemplates';
 
 export type WorkspaceTab = 'resumes' | 'orders' | 'exports';
 export function useWorkspaceData(tab: WorkspaceTab) {
   const resumes = useRequest(resumeApi.list, { retryCount: 1 });
-  const orders = useRequest(() => api<Order[]>('GET', '/orders'), {
+  const orders = useRequest(membershipApi.listOrders, {
     ready: tab === 'orders',
     retryCount: 1,
   });
-  const exports = useRequest(() => api<ExportLog[]>('GET', '/exports/logs'), {
+  const exports = useRequest(exportApi.list, {
     ready: tab === 'exports',
     retryCount: 1,
   });

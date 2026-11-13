@@ -1,11 +1,11 @@
 package cn.resumecraft.service;
 
-import static cn.resumecraft.api.BizException.require;
+import static cn.resumecraft.exception.BizException.require;
 
 import cn.resumecraft.dto.MembershipResponse;
 import cn.resumecraft.dto.UpdateProfileRequest;
+import cn.resumecraft.entity.User;
 import cn.resumecraft.mapper.UserMapper;
-import cn.resumecraft.model.User;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

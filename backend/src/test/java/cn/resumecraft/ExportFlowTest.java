@@ -3,9 +3,9 @@ package cn.resumecraft;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import cn.resumecraft.api.BizException;
-import cn.resumecraft.model.ExportLog;
-import cn.resumecraft.model.Order;
+import cn.resumecraft.entity.ExportLog;
+import cn.resumecraft.entity.Order;
+import cn.resumecraft.exception.BizException;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ class ExportFlowTest extends ApiTestSupport {
             () -> {
               try {
                 return exportService.reserve(a.id(), rid).id;
-              } catch (cn.resumecraft.api.BizException e) {
+              } catch (cn.resumecraft.exception.BizException e) {
                 return -1L;
               }
             });

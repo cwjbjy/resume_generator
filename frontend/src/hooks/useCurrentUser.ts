@@ -1,5 +1,5 @@
 import { useRequest } from 'ahooks';
-import { refreshUser } from '../api/userApi';
+import { refreshUser } from '../features/user/api/userApi';
 import { useSession } from '../stores/sessionStore';
 
 export function useCurrentUser() {

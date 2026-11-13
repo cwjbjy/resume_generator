@@ -1,6 +1,6 @@
 package cn.resumecraft.security;
 
-import cn.resumecraft.api.Api;
+import cn.resumecraft.common.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,6 +21,6 @@ public class UnauthorizedEntryPoint implements AuthenticationEntryPoint {
       throws IOException {
     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     response.setContentType("application/json;charset=UTF-8");
-    objectMapper.writeValue(response.getWriter(), new Api<>(401, "登录已过期，请重新登录", null));
+    objectMapper.writeValue(response.getWriter(), new ApiResponse<>(401, "登录已过期，请重新登录", null));
   }
 }

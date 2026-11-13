@@ -1,14 +1,13 @@
 import { useCountDown, useLockFn, useRequest, useUnmountedRef } from 'ahooks';
 import { CheckCircle2, ShieldCheck } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
-import { refreshUser } from '../../../api/userApi';
 import { ErrorBox } from '../../../components/ui/ErrorBox';
 import { Loading } from '../../../components/ui/Loading';
 import { useRuntimeConfig } from '../../../hooks/useRuntimeConfig';
-import { api } from '../../../lib/http';
 import { notify } from '../../../stores/noticeStore';
 import { useSession } from '../../../stores/sessionStore';
-import { type Order } from '../../../types/index';
+import { refreshUser } from '../../user/api/userApi';
+import { membershipApi } from '../api/membershipApi';
 import { CheckoutActions } from '../components/CheckoutActions';
 import { checkoutTitle } from '../utils/checkoutTitle';
 import { statusText } from '../utils/orderStatus';
@@ -16,7 +15,7 @@ export function CheckoutPage() {
   const { id } = useParams();
   const unmounted = useUnmountedRef();
   const { data, error, loading, refreshAsync, cancel } = useRequest(
-    () => api<Order>('GET', '/orders/' + id),
+    () => membershipApi.getOrder(id),
     {
       refreshDeps: [id],
       retryCount: 1,
@@ -33,7 +32,7 @@ export function CheckoutPage() {
   const payment = useRequest(
     async (success: boolean) => {
       const token = useSession.getState().token;
-      await api('POST', '/pay/mock', { orderId: Number(id), success });
+      await membershipApi.mockPayment(Number(id), success);
       if (unmounted.current || useSession.getState().token !== token) return success;
       await refreshAsync();
       if (success) {

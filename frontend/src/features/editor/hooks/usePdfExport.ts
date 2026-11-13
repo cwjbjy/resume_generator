@@ -2,7 +2,7 @@ import { useLockFn, useRequest } from 'ahooks';
 import { useEffect, useState } from 'react';
 import { notify } from '../../../stores/noticeStore';
 import type { Resume, Template } from '../../../types';
-import { exportResumePdf } from '../../pdf/exportResumePdf';
+import { exportResumePdf } from '../../resumes/pdf/exportResumePdf';
 
 export function usePdfExport(
   save: () => Promise<Resume>,

@@ -1,6 +1,6 @@
 import { useDebounceEffect, useEventListener, useMemoizedFn, useMount } from 'ahooks';
 import { useRef, useState } from 'react';
-import { resumeApi } from '../../../api/resumeApi';
+import { resumeApi } from '../../resumes/api/resumeApi';
 import { notify } from '../../../stores/noticeStore';
 import type { Resume } from '../../../types';
 import { readLocalDraft, validateDraft, type LocalDraft } from '../model/draftStorage';

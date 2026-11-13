@@ -4,10 +4,10 @@ import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ErrorBox } from '../../../components/ui/ErrorBox';
 import { Loading } from '../../../components/ui/Loading';
-import { api } from '../../../lib/http';
 import { notify } from '../../../stores/noticeStore';
 import { useSession } from '../../../stores/sessionStore';
-import type { Order, Plan } from '../../../types';
+import type { Plan } from '../../../types';
+import { membershipApi } from '../api/membershipApi';
 import { PlanCard } from '../components/PlanCard';
 import { PricingFaq } from '../components/PricingFaq';
 
@@ -19,11 +19,11 @@ export function PricingPage() {
     data: plans,
     error,
     loading,
-  } = useRequest(() => api<Plan[]>('GET', '/plans'), { cacheKey: 'plans', retryCount: 1 });
+  } = useRequest(membershipApi.listPlans, { cacheKey: 'plans', retryCount: 1 });
   const purchase = useRequest(
     async (plan: Plan) => {
       requestKeys.current[plan.id] ||= crypto.randomUUID();
-      return api<Order>('POST', '/orders', {
+      return membershipApi.createOrder({
         planId: plan.id,
         requestKey: requestKeys.current[plan.id],
       });

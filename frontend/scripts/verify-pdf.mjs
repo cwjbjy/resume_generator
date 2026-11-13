@@ -15,8 +15,8 @@ const standardFontDataUrl =
 await fs.mkdir(output, { recursive: true });
 await build({
   entryPoints: {
-    document: path.join(root, 'src/features/pdf/PdfDocument.tsx'),
-    fonts: path.join(root, 'src/features/pdf/fonts.ts'),
+    document: path.join(root, 'src/features/resumes/pdf/PdfDocument.tsx'),
+    fonts: path.join(root, 'src/features/resumes/pdf/fonts.ts'),
   },
   outdir: output,
   outExtension: { '.js': '.mjs' },

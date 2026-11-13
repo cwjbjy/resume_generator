@@ -1,6 +1,6 @@
 package cn.resumecraft.service;
 
-import static cn.resumecraft.api.BizException.require;
+import static cn.resumecraft.exception.BizException.require;
 
 import cn.resumecraft.dto.PaymentCallback;
 import java.nio.charset.StandardCharsets;

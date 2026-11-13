@@ -1,6 +1,6 @@
 import { ArrowRight, Clock3, Copy, Pencil, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { ResumePreview } from '../../../components/resume/ResumePreview';
+import { ResumePreview } from '../../resumes/components/ResumePreview';
 import { Button } from '../../../components/ui/Button';
 import type { Resume, Template } from '../../../types';
 

@@ -1,6 +1,6 @@
 import { Minus, Plus, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
-import { ResumePreview } from '../../../components/resume/ResumePreview';
+import { ResumePreview } from '../../resumes/components/ResumePreview';
 import type { Content, Template } from '../../../types';
 
 export function EditorPreview({

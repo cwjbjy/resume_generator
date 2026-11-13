@@ -7,10 +7,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import cn.resumecraft.dto.PaymentCallback;
+import cn.resumecraft.entity.Order;
 import cn.resumecraft.mapper.ExportLogMapper;
 import cn.resumecraft.mapper.OrderMapper;
 import cn.resumecraft.mapper.UserMapper;
-import cn.resumecraft.model.Order;
 import cn.resumecraft.service.ExportService;
 import cn.resumecraft.service.OrderService;
 import cn.resumecraft.service.PaymentService;
@@ -34,56 +34,45 @@ import org.springframework.test.web.servlet.MvcResult;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(MySqlTestConfiguration.class)
-@ActiveProfiles({ "dev", "test" })
+@ActiveProfiles({"dev", "test"})
 abstract class ApiTestSupport {
-  @Autowired
-  MockMvc mvc;
-  @Autowired
-  ObjectMapper json;
-  @Autowired
-  UserMapper users;
-  @Autowired
-  OrderMapper orders;
-  @Autowired
-  ExportLogMapper exports;
-  @Autowired
-  PaymentService payments;
-  @Autowired
-  OrderService orderService;
-  @Autowired
-  PaymentSignatureService signatureService;
-  @Autowired
-  ExportService exportService;
-  @Autowired
-  PasswordEncoder passwords;
+  @Autowired MockMvc mvc;
+  @Autowired ObjectMapper json;
+  @Autowired UserMapper users;
+  @Autowired OrderMapper orders;
+  @Autowired ExportLogMapper exports;
+  @Autowired PaymentService payments;
+  @Autowired OrderService orderService;
+  @Autowired PaymentSignatureService signatureService;
+  @Autowired ExportService exportService;
+  @Autowired PasswordEncoder passwords;
 
-  record Account(long id, String token) {
-  }
+  record Account(long id, String token) {}
 
   Account account() throws Exception {
     String name = "test" + UUID.randomUUID().toString().replace("-", "").substring(0, 14);
-    JsonNode data = call(
-        "POST",
-        "/api/auth/register",
-        null,
-        Map.of("username", name, "password", "test123456"),
-        200);
+    JsonNode data =
+        call(
+            "POST",
+            "/api/auth/register",
+            null,
+            Map.of("username", name, "password", "test123456"),
+            200);
     return new Account(data.path("user").path("id").asLong(), data.path("token").asText());
   }
 
   JsonNode call(String method, String path, Account user, Object body, int status)
       throws Exception {
-    var req = switch (method) {
-      case "POST" -> post(path);
-      case "PUT" -> put(path);
-      case "DELETE" -> delete(path);
-      default -> get(path);
-    };
+    var req =
+        switch (method) {
+          case "POST" -> post(path);
+          case "PUT" -> put(path);
+          case "DELETE" -> delete(path);
+          default -> get(path);
+        };
     req.contentType(MediaType.APPLICATION_JSON);
-    if (user != null)
-      req.header("Authorization", "Bearer " + user.token());
-    if (body != null)
-      req.content(json.writeValueAsBytes(body));
+    if (user != null) req.header("Authorization", "Bearer " + user.token());
+    if (body != null) req.content(json.writeValueAsBytes(body));
     MvcResult result = mvc.perform(req).andExpect(status().is(status)).andReturn();
     return json.readTree(result.getResponse().getContentAsByteArray()).path("data");
   }
@@ -102,16 +91,14 @@ abstract class ApiTestSupport {
 
   long planId(int durationDays) throws Exception {
     for (JsonNode plan : call("GET", "/api/plans", null, null, 200))
-      if (plan.path("durationDays").asInt() == durationDays)
-        return plan.path("id").asLong();
+      if (plan.path("durationDays").asInt() == durationDays) return plan.path("id").asLong();
     throw new IllegalStateException("未找到 " + durationDays + " 天套餐");
   }
 
   private long templateId(boolean vip) throws Exception {
     String filter = vip ? "vip" : "free";
     for (JsonNode template : call("GET", "/api/templates?filter=" + filter, null, null, 200))
-      if (template.path("isVip").asBoolean() == vip)
-        return template.path("id").asLong();
+      if (template.path("isVip").asBoolean() == vip) return template.path("id").asLong();
     throw new IllegalStateException("未找到" + (vip ? "会员" : "免费") + "模板");
   }
 

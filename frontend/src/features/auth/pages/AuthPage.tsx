@@ -3,10 +3,9 @@ import { ArrowRight, ShieldCheck } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
-import { api } from '../../../lib/http';
 import { notify } from '../../../stores/noticeStore';
 import { useSession } from '../../../stores/sessionStore';
-import { type User } from '../../../types/index';
+import { authApi } from '../api/authApi';
 import { AuthStory } from '../components/AuthStory';
 export function AuthPage({ register = false }: { register?: boolean }) {
   const [params] = useSearchParams();
@@ -15,11 +14,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
   const login = useSession((s) => s.login);
   const authentication = useRequest(
     (credentials: Record<string, FormDataEntryValue>) =>
-      api<{ token: string; user: User }>(
-        'POST',
-        register ? '/auth/register' : '/auth/login',
-        credentials,
-      ),
+      authApi.authenticate(credentials, register),
     {
       manual: true,
       onSuccess(result) {
