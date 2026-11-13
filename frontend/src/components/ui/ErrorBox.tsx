@@ -1,5 +1,11 @@
 import { Button } from './Button';
-export function ErrorBox({ error, retry }: { error: Error | null; retry?: () => void }) {
+export function ErrorBox({
+  error,
+  retry,
+}: {
+  error: Error | null | undefined;
+  retry?: () => void;
+}) {
   return (
     <div className="error-box" role="alert">
       {error?.message || '加载失败'}

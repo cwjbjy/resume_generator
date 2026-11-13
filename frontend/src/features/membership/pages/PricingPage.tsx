@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useLockFn, useRequest } from 'ahooks';
 import { CheckCircle2, Crown, Download, LayoutTemplate, ShieldCheck } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ErrorBox } from '../../../components/ui/ErrorBox';
 import { Loading } from '../../../components/ui/Loading';
@@ -14,32 +14,37 @@ import { PricingFaq } from '../components/PricingFaq';
 export function PricingPage() {
   const user = useSession((state) => state.user);
   const navigate = useNavigate();
-  const [pendingPlanId, setPendingPlanId] = useState<number | null>(null);
   const requestKeys = useRef<Record<number, string>>({});
   const {
     data: plans,
     error,
-    isLoading,
-  } = useQuery({ queryKey: ['plans'], queryFn: () => api<Plan[]>('GET', '/plans') });
-  async function buy(plan: Plan) {
+    loading,
+  } = useRequest(() => api<Plan[]>('GET', '/plans'), { cacheKey: 'plans', retryCount: 1 });
+  const purchase = useRequest(
+    async (plan: Plan) => {
+      requestKeys.current[plan.id] ||= crypto.randomUUID();
+      return api<Order>('POST', '/orders', {
+        planId: plan.id,
+        requestKey: requestKeys.current[plan.id],
+      });
+    },
+    {
+      manual: true,
+      onSuccess(order) {
+        navigate(`/checkout/${order.id}`);
+      },
+      onError(error) {
+        notify(error.message);
+      },
+    },
+  );
+  const buy = useLockFn(async (plan: Plan) => {
     if (!user) {
       navigate('/login?redirect=/pricing');
       return;
     }
-    setPendingPlanId(plan.id);
-    try {
-      requestKeys.current[plan.id] ||= crypto.randomUUID();
-      const order = await api<Order>('POST', '/orders', {
-        planId: plan.id,
-        requestKey: requestKeys.current[plan.id],
-      });
-      navigate(`/checkout/${order.id}`);
-    } catch (purchaseError) {
-      notify((purchaseError as Error).message);
-    } finally {
-      setPendingPlanId(null);
-    }
-  }
+    await purchase.runAsync(plan).catch(() => {});
+  });
   return (
     <main className="pricing-page">
       <div className="center-heading">
@@ -57,7 +62,7 @@ export function PricingPage() {
           </div>
         )}
       </div>
-      {isLoading && <Loading />}
+      {loading && !plans && <Loading />}
       {error && <ErrorBox error={error} />}
       <div className="price-grid">
         {plans?.map((plan) => (
@@ -65,8 +70,8 @@ export function PricingPage() {
             key={plan.id}
             plan={plan}
             isMember={Boolean(user?.member)}
-            busy={pendingPlanId === plan.id}
-            disabled={pendingPlanId !== null}
+            busy={purchase.loading && purchase.params[0]?.id === plan.id}
+            disabled={purchase.loading}
             onBuy={() => void buy(plan)}
           />
         ))}

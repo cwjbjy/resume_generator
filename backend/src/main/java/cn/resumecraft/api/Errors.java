@@ -1,6 +1,6 @@
 package cn.resumecraft.api;
 
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
+@Slf4j
 public class Errors {
   @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
   ResponseEntity<Api<Void>> missing(Exception e) {
@@ -47,7 +48,7 @@ public class Errors {
 
   @ExceptionHandler(Exception.class)
   ResponseEntity<Api<Void>> unknown(Exception e) {
-    LoggerFactory.getLogger(Errors.class).error("Unhandled API error", e);
+    log.error("Unhandled API error", e);
     return ResponseEntity.internalServerError().body(new Api<>(500, "服务暂时不可用，请稍后重试", null));
   }
 }

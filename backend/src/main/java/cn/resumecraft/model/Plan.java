@@ -2,7 +2,9 @@ package cn.resumecraft.model;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Getter;
 
+@Getter
 @TableName("plans")
 public class Plan {
   @TableId public Long id;
@@ -12,8 +14,4 @@ public class Plan {
   public Integer durationDays;
   public String features;
   public Integer sort;
-
-  public Integer getSort() {
-    return sort;
-  }
 }

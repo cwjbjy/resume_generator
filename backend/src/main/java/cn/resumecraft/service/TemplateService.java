@@ -8,17 +8,14 @@ import cn.resumecraft.model.Template;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class TemplateService {
   private final TemplateMapper templateMapper;
   private final UserMapper userMapper;
-
-  public TemplateService(TemplateMapper templateMapper, UserMapper userMapper) {
-    this.templateMapper = templateMapper;
-    this.userMapper = userMapper;
-  }
 
   public List<Template> list(String filter) {
     LambdaQueryWrapper<Template> query = new LambdaQueryWrapper<>();

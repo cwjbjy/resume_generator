@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useBoolean, useLatest, useLockFn, useRequest, useUnmountedRef } from 'ahooks';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -27,41 +27,40 @@ const tabs: { key: WorkspaceTab; label: string }[] = [
 
 export function WorkspacePage() {
   const user = useSession((state) => state.user)!;
-  const client = useQueryClient();
   const [tab, setTab] = useState<WorkspaceTab>('resumes');
+  const currentTab = useLatest(tab);
+  const unmounted = useUnmountedRef();
   const [renaming, setRenaming] = useState<Resume | null>(null);
   const [removing, setRemoving] = useState<Resume | null>(null);
   const [refunding, setRefunding] = useState<Order | null>(null);
-  const [editingProfile, setEditingProfile] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [editingProfile, { setTrue: openProfile, setFalse: closeProfile }] = useBoolean(false);
   const { resumes, orders, exports, templates, config } = useWorkspaceData(tab);
   const catalog = templates.data ?? [];
 
-  async function run(action: () => Promise<unknown>, message: string) {
-    setBusy(true);
-    try {
+  const { runAsync, loading: busy } = useRequest(
+    async (action: () => Promise<unknown>, message: string) => {
+      const token = useSession.getState().token;
       await action();
+      if (unmounted.current || useSession.getState().token !== token) return false;
       notify(message);
       setRenaming(null);
       setRemoving(null);
       setRefunding(null);
       await Promise.all([
-        client.invalidateQueries({ queryKey: ['resumes'] }),
-        client.invalidateQueries({ queryKey: ['orders'] }),
+        resumes.refreshAsync(),
+        currentTab.current === 'orders' ? orders.refreshAsync() : Promise.resolve(),
         refreshUser(),
       ]);
-      void client.invalidateQueries({ queryKey: ['user'] });
       return true;
-    } catch (error) {
-      notify((error as Error).message);
-      return false;
-    } finally {
-      setBusy(false);
-    }
-  }
+    },
+    { manual: true, onError: (error) => notify(error.message) },
+  );
+  const run = useLockFn((action: () => Promise<unknown>, message: string) =>
+    runAsync(action, message).catch(() => false),
+  );
   async function saveProfile(profile: ProfileInput) {
     const succeeded = await run(() => api('PUT', '/users/me', profile), '资料已更新');
-    if (succeeded) setEditingProfile(false);
+    if (succeeded) closeProfile();
   }
 
   return (
@@ -78,7 +77,7 @@ export function WorkspacePage() {
         </Link>
       </div>
       <div className="me-layout">
-        <ProfileCard user={user} onEdit={() => setEditingProfile(true)} />
+        <ProfileCard user={user} onEdit={openProfile} />
         <section className="workspace-main">
           <div className="workspace-tabs">
             {tabs.map((item) => (
@@ -94,10 +93,8 @@ export function WorkspacePage() {
           </div>
           {tab === 'resumes' && (
             <>
-              {(resumes.isLoading || templates.isPending) && <Loading />}
-              {resumes.error && (
-                <ErrorBox error={resumes.error} retry={() => void resumes.refetch()} />
-              )}
+              {(resumes.loading || templates.loading) && <Loading />}
+              {resumes.error && <ErrorBox error={resumes.error} retry={resumes.refresh} />}
               <div className="my-resume-grid">
                 {resumes.data?.map((resume) => (
                   <ResumeCard
@@ -124,7 +121,7 @@ export function WorkspacePage() {
           )}
           {tab === 'orders' && (
             <>
-              {orders.isLoading && <Loading />}
+              {orders.loading && <Loading />}
               {orders.error && <ErrorBox error={orders.error} />}
               <OrderList
                 orders={orders.data}
@@ -135,7 +132,7 @@ export function WorkspacePage() {
           )}
           {tab === 'exports' && (
             <>
-              {exports.isLoading && <Loading />}
+              {exports.loading && <Loading />}
               {exports.error && <ErrorBox error={exports.error} />}
               <ExportHistory records={exports.data} />
             </>
@@ -182,7 +179,7 @@ export function WorkspacePage() {
         <ProfileDialog
           user={user}
           busy={busy}
-          onClose={() => setEditingProfile(false)}
+          onClose={closeProfile}
           onSubmit={(profile) => void saveProfile(profile)}
         />
       )}

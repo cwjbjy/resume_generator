@@ -8,6 +8,7 @@ import cn.resumecraft.service.PaymentService;
 import cn.resumecraft.service.PaymentSignatureService;
 import jakarta.validation.Valid;
 import java.time.Instant;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,19 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Profile("dev")
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class MockPaymentController {
   private final OrderService orderService;
   private final PaymentService paymentService;
   private final PaymentSignatureService signatureService;
-
-  public MockPaymentController(
-      OrderService orderService,
-      PaymentService paymentService,
-      PaymentSignatureService signatureService) {
-    this.orderService = orderService;
-    this.paymentService = paymentService;
-    this.signatureService = signatureService;
-  }
 
   @PostMapping("/pay/mock")
   Api<Order> mock(Authentication authentication, @Valid @RequestBody MockPaymentRequest request) {

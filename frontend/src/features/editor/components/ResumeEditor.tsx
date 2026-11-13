@@ -1,3 +1,4 @@
+import { useBoolean } from 'ahooks';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ErrorBox } from '../../../components/ui/ErrorBox';
@@ -23,14 +24,15 @@ export function ResumeEditor({ initialResume }: { initialResume: Resume }) {
   const {
     data: templateData,
     error: templateError,
-    isPending: templatesPending,
-    refetch: refetchTemplates,
+    loading: templatesPending,
+    refresh: refetchTemplates,
   } = useTemplates();
   const templates = templateData ?? [];
   const draft = useResumeDraft(initialResume, user.id);
   const pdf = usePdfExport(draft.save, templates, user.member);
   const [module, setModule] = useState<EditorModule>('basic');
-  const [switchingTemplate, setSwitchingTemplate] = useState(false);
+  const [switchingTemplate, { setTrue: openTemplateDialog, setFalse: closeTemplateDialog }] =
+    useBoolean(false);
   const template = templates.find((item) => item.id === draft.resume.templateId);
 
   async function save(goBack = false) {
@@ -48,7 +50,7 @@ export function ResumeEditor({ initialResume }: { initialResume: Resume }) {
       return;
     }
     draft.change({ ...draft.resume, templateId: nextTemplate.id });
-    setSwitchingTemplate(false);
+    closeTemplateDialog();
   }
 
   if (templatesPending) {
@@ -79,7 +81,7 @@ export function ResumeEditor({ initialResume }: { initialResume: Resume }) {
         onTitleChange={(title) => draft.change({ ...draft.resume, title })}
         onBack={() => void save(true)}
         onSave={() => void save()}
-        onSwitchTemplate={() => setSwitchingTemplate(true)}
+        onSwitchTemplate={openTemplateDialog}
         onExport={() => void pdf.exportPdf()}
       />
       <div className="editor-workspace">
@@ -112,7 +114,7 @@ export function ResumeEditor({ initialResume }: { initialResume: Resume }) {
           templates={templates}
           selectedId={template.id}
           onSelect={selectTemplate}
-          onClose={() => setSwitchingTemplate(false)}
+          onClose={closeTemplateDialog}
         />
       )}
       {pdf.document && <ExportDialog {...pdf.document} onClose={pdf.closePreview} />}

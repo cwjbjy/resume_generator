@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { ArrowUpRight, Crown, LogOut, Menu } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
@@ -10,7 +9,6 @@ import { Brand } from './Brand';
 export function SiteHeader() {
   const user = useCurrentUser();
   const logout = useSession((state) => state.logout);
-  const queryClient = useQueryClient();
   const location = useLocation();
   const [expandedPath, setExpandedPath] = useState<string | null>(null);
   const open = expandedPath === location.pathname;
@@ -42,7 +40,6 @@ export function SiteHeader() {
                 aria-label="退出登录"
                 onClick={() => {
                   logout();
-                  queryClient.clear();
                   notify('已退出登录');
                 }}
               >

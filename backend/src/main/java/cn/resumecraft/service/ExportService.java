@@ -12,26 +12,17 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class ExportService {
   private final ExportLogMapper exportLogMapper;
   private final UserMapper userMapper;
   private final ResumeService resumeService;
   private final TemplateService templateService;
-
-  public ExportService(
-      ExportLogMapper exportLogMapper,
-      UserMapper userMapper,
-      ResumeService resumeService,
-      TemplateService templateService) {
-    this.exportLogMapper = exportLogMapper;
-    this.userMapper = userMapper;
-    this.resumeService = resumeService;
-    this.templateService = templateService;
-  }
 
   @Transactional
   public ExportLog reserve(Long userId, Long resumeId) {

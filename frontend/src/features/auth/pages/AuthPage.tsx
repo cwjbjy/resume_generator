@@ -1,5 +1,6 @@
+import { useLockFn, useRequest } from 'ahooks';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
-import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
 import { api } from '../../../lib/http';
@@ -12,29 +13,30 @@ export function AuthPage({ register = false }: { register?: boolean }) {
   const redirect = params.get('redirect') || '/me';
   const navigate = useNavigate();
   const login = useSession((s) => s.login);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  async function submit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError('');
-    setBusy(true);
-    const f = new FormData(e.currentTarget);
-    try {
-      const result = await api<{ token: string; user: User }>(
+  const authentication = useRequest(
+    (credentials: Record<string, FormDataEntryValue>) =>
+      api<{ token: string; user: User }>(
         'POST',
         register ? '/auth/register' : '/auth/login',
-        Object.fromEntries(f),
-      );
-      login(result.token, result.user);
-      navigate(redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/me', {
-        replace: true,
-      });
-      notify(register ? '注册成功，欢迎来到简历工坊' : '欢迎回来');
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
+        credentials,
+      ),
+    {
+      manual: true,
+      onSuccess(result) {
+        login(result.token, result.user);
+        navigate(redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/me', {
+          replace: true,
+        });
+        notify(register ? '注册成功，欢迎来到简历工坊' : '欢迎回来');
+      },
+    },
+  );
+  const authenticate = useLockFn(async (credentials: Record<string, FormDataEntryValue>) => {
+    await authentication.runAsync(credentials).catch(() => {});
+  });
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void authenticate(Object.fromEntries(new FormData(event.currentTarget)));
   }
   return (
     <main className="auth-page">
@@ -81,12 +83,12 @@ export function AuthPage({ register = false }: { register?: boolean }) {
               placeholder="至少 6 位密码"
             />
           </label>
-          {error && (
+          {authentication.error && !authentication.loading && (
             <div className="inline-error" role="alert">
-              {error}
+              {authentication.error.message}
             </div>
           )}
-          <Button busy={busy} className="primary full" type="submit">
+          <Button busy={authentication.loading} className="primary full" type="submit">
             {register ? '免费注册' : '登录'} <ArrowRight size={16} />
           </Button>
           <p className="auth-switch">

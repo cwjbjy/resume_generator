@@ -6,6 +6,7 @@ import cn.resumecraft.model.Resume;
 import cn.resumecraft.service.ResumeService;
 import jakarta.validation.Valid;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,12 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/resumes")
+@RequiredArgsConstructor
 public class ResumeController {
   private final ResumeService resumeService;
-
-  public ResumeController(ResumeService resumeService) {
-    this.resumeService = resumeService;
-  }
 
   @PostMapping
   Api<Resume> create(

@@ -4,6 +4,7 @@ import cn.resumecraft.mapper.UserMapper;
 import cn.resumecraft.model.User;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.time.LocalDateTime;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,14 +12,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Profile("dev")
+@RequiredArgsConstructor
 public class DemoSeed implements CommandLineRunner {
   private final UserMapper userMapper;
   private final PasswordEncoder passwordEncoder;
-
-  public DemoSeed(UserMapper userMapper, PasswordEncoder passwordEncoder) {
-    this.userMapper = userMapper;
-    this.passwordEncoder = passwordEncoder;
-  }
 
   public void run(String... args) {
     for (String name : new String[] {"user01", "vip01"}) {

@@ -1,6 +1,5 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCountDown, useLockFn, useRequest, useUnmountedRef } from 'ahooks';
 import { CheckCircle2, ShieldCheck } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { refreshUser } from '../../../api/userApi';
 import { ErrorBox } from '../../../components/ui/ErrorBox';
@@ -8,48 +7,56 @@ import { Loading } from '../../../components/ui/Loading';
 import { useRuntimeConfig } from '../../../hooks/useRuntimeConfig';
 import { api } from '../../../lib/http';
 import { notify } from '../../../stores/noticeStore';
+import { useSession } from '../../../stores/sessionStore';
 import { type Order } from '../../../types/index';
 import { CheckoutActions } from '../components/CheckoutActions';
 import { checkoutTitle } from '../utils/checkoutTitle';
 import { statusText } from '../utils/orderStatus';
 export function CheckoutPage() {
   const { id } = useParams();
-  const query = useQueryClient();
-  const [busy, setBusy] = useState(false);
-  const [now, setNow] = useState(() => Date.now());
-  const {
-    data: order,
-    error,
-    isLoading,
-  } = useQuery({
-    queryKey: ['order', id],
-    queryFn: () => api<Order>('GET', '/orders/' + id),
-    refetchInterval: (q) => (q.state.data?.status === 'CREATED' ? 3000 : false),
-  });
+  const unmounted = useUnmountedRef();
+  const { data, error, loading, refreshAsync, cancel } = useRequest(
+    () => api<Order>('GET', '/orders/' + id),
+    {
+      refreshDeps: [id],
+      retryCount: 1,
+      pollingInterval: 3000,
+      pollingWhenHidden: false,
+      onSuccess(order) {
+        if (order.status !== 'CREATED') cancel();
+      },
+    },
+  );
+  const order = data?.id === Number(id) ? data : undefined;
+  const [remainingTime] = useCountDown({ targetDate: order?.expiredAt });
   const config = useRuntimeConfig();
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  async function pay(success: boolean) {
-    setBusy(true);
-    try {
+  const payment = useRequest(
+    async (success: boolean) => {
+      const token = useSession.getState().token;
       await api('POST', '/pay/mock', { orderId: Number(id), success });
-      await query.invalidateQueries({ queryKey: ['order', id] });
+      if (unmounted.current || useSession.getState().token !== token) return success;
+      await refreshAsync();
       if (success) {
         await refreshUser();
-        query.invalidateQueries({ queryKey: ['user'] });
-        notify('会员已开通，所有模板已解锁');
-      } else notify('已模拟支付失败，订单仍可重试');
-    } catch (e) {
-      notify((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
-  if (isLoading) return <Loading />;
+      }
+      return success;
+    },
+    {
+      manual: true,
+      onSuccess(success) {
+        notify(success ? '会员已开通，所有模板已解锁' : '已模拟支付失败，订单仍可重试');
+      },
+      onError(error) {
+        notify(error.message);
+      },
+    },
+  );
+  const pay = useLockFn(async (success: boolean) => {
+    await payment.runAsync(success).catch(() => {});
+  });
+  if (loading && !order) return <Loading />;
   if (!order) return <ErrorBox error={error} />;
-  const seconds = Math.max(0, Math.floor((new Date(order.expiredAt).getTime() - now) / 1000));
+  const seconds = Math.max(0, Math.floor(remainingTime / 1000));
   return (
     <main className="checkout-page">
       <Link className="back-link" to="/pricing">
@@ -96,7 +103,7 @@ export function CheckoutPage() {
           status={order.status}
           remainingSeconds={seconds}
           mockEnabled={Boolean(config.data?.mockEnabled)}
-          busy={busy}
+          busy={payment.loading}
           onPay={(success) => void pay(success)}
         />
         <span className="checkout-security">

@@ -16,7 +16,14 @@ http.interceptors.response.use(
       (error.code === 'ECONNABORTED'
         ? '请求超时，请稍后重试'
         : '暂时无法连接服务，请确认后端已启动');
-    if (error.response?.status === 401 && !error.config?.url?.includes('/auth/')) {
+    const token = useSession.getState().token;
+    const requestAuthorization = error.config?.headers?.Authorization;
+    if (
+      error.response?.status === 401 &&
+      !error.config?.url?.includes('/auth/') &&
+      token &&
+      requestAuthorization === `Bearer ${token}`
+    ) {
       useSession.getState().logout();
       const redirect = encodeURIComponent(window.location.pathname + window.location.search);
       window.location.assign(`/login?redirect=${redirect}`);

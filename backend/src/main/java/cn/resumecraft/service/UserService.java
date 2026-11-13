@@ -7,15 +7,13 @@ import cn.resumecraft.dto.UpdateProfileRequest;
 import cn.resumecraft.mapper.UserMapper;
 import cn.resumecraft.model.User;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
   private final UserMapper userMapper;
-
-  public UserService(UserMapper userMapper) {
-    this.userMapper = userMapper;
-  }
 
   public User current(Long userId) {
     User user = userMapper.selectById(userId);

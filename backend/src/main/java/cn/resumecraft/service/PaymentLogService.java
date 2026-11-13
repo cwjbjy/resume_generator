@@ -6,17 +6,14 @@ import cn.resumecraft.model.PaymentLog;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class PaymentLogService {
   private final PaymentLogMapper paymentLogMapper;
   private final ObjectMapper objectMapper;
-
-  public PaymentLogService(PaymentLogMapper paymentLogMapper, ObjectMapper objectMapper) {
-    this.paymentLogMapper = paymentLogMapper;
-    this.objectMapper = objectMapper;
-  }
 
   public void record(Order order, Object body, String result) {
     PaymentLog log = new PaymentLog();

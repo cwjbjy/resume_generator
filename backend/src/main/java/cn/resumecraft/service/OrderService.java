@@ -14,21 +14,17 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class OrderService {
   private final OrderMapper orderMapper;
   private final PlanMapper planMapper;
   private final UserMapper userMapper;
-
-  public OrderService(OrderMapper orderMapper, PlanMapper planMapper, UserMapper userMapper) {
-    this.orderMapper = orderMapper;
-    this.planMapper = planMapper;
-    this.userMapper = userMapper;
-  }
 
   public List<Plan> plans() {
     return planMapper.selectList(new LambdaQueryWrapper<Plan>().orderByAsc(Plan::getSort));

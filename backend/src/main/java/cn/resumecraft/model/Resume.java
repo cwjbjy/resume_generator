@@ -3,7 +3,9 @@ package cn.resumecraft.model;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
+import lombok.Getter;
 
+@Getter
 @TableName("resumes")
 public class Resume {
   @TableId public Long id;
@@ -15,32 +17,4 @@ public class Resume {
   public String status;
   public LocalDateTime createdAt;
   public LocalDateTime updatedAt;
-
-  public Long getId() {
-    return id;
-  }
-
-  public Long getUserId() {
-    return userId;
-  }
-
-  public Long getTemplateId() {
-    return templateId;
-  }
-
-  public String getTitle() {
-    return title;
-  }
-
-  public String getContent() {
-    return content;
-  }
-
-  public Integer getVersion() {
-    return version;
-  }
-
-  public LocalDateTime getUpdatedAt() {
-    return updatedAt;
-  }
 }

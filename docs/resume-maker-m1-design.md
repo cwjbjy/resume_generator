@@ -52,7 +52,7 @@
 | 认证     | Spring Security + JWT（jjwt 0.12.x）                                      | BCrypt，无状态                                     |
 | 接口文档 | springdoc-openapi + Knife4j                                               | `/doc.html`                                        |
 | 前端     | React 19 + TypeScript + Vite 6                                            | SPA                                                |
-| 前端库   | React Router 7、TanStack Query 5、zustand 5、Tailwind CSS 4、axios、dayjs |                                                    |
+| 前端库   | React Router 7、ahooks 3、zustand 5、Tailwind CSS 4、axios、dayjs         |                                                    |
 | PDF 生成 | @react-pdf/renderer 4.x                                                   | React 组件写模板；中文注册字体（Noto Sans SC）     |
 | PDF 预览 | 浏览器 iframe（默认）｜pdfjs-dist（可选增强）                             | 见 §8                                              |
 | 部署     | Docker Compose + Nginx + GitHub Actions                                   | 单机                                               |
@@ -198,7 +198,7 @@ erDiagram
 **F04 前端工程初始化**
 
 - 验收：Vite 启动；路由 6 条（`/`、`/login`、`/register`、`/templates`、`/editor/:id`、`/pricing`、`/me`）；axios 拦截器自动带 token、401 统一跳登录；Tailwind 生效。
-- 面试讲点：axios 拦截器 vs fetch 封装；为什么用 TanStack Query（缓存/重试/失效）。
+- 前端通过 axios 拦截器处理认证与错误，使用 ahooks `useRequest` 管理请求状态、缓存、重试与轮询。写操作完成后显式刷新对应数据。
 
 ### 阶段 1：认证
 

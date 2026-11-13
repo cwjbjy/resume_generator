@@ -10,23 +10,18 @@ import cn.resumecraft.security.TokenService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
   private static final String UNKNOWN_USER_HASH =
       "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
   private final UserMapper userMapper;
   private final PasswordEncoder passwordEncoder;
   private final TokenService tokenService;
-
-  public AuthService(
-      UserMapper userMapper, PasswordEncoder passwordEncoder, TokenService tokenService) {
-    this.userMapper = userMapper;
-    this.passwordEncoder = passwordEncoder;
-    this.tokenService = tokenService;
-  }
 
   public AuthResponse register(CredentialsRequest credentials) {
     validatePasswordLength(credentials.password());

@@ -1,5 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { useLockFn, useMemoizedFn, useRequest } from 'ahooks';
 import { useNavigate } from 'react-router-dom';
 import { resumeApi } from '../../../api/resumeApi';
 import { notify } from '../../../stores/noticeStore';
@@ -9,19 +8,17 @@ import type { Template } from '../../../types';
 export function useCreateResume() {
   const user = useSession((state) => state.user);
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { mutate, isPending } = useMutation({
-    mutationFn: (template: Template) => resumeApi.create(template.id),
+  const { runAsync, loading } = useRequest((template: Template) => resumeApi.create(template.id), {
+    manual: true,
     onSuccess(resume) {
-      void queryClient.invalidateQueries({ queryKey: ['resumes'] });
       navigate(`/editor/${resume.id}`);
     },
     onError(error) {
       notify(error.message);
     },
   });
-  const createResume = useCallback(
-    (template: Template) => {
+  const createResume = useLockFn(
+    useMemoizedFn(async (template: Template) => {
       if (!user) {
         navigate(`/login?redirect=${encodeURIComponent(`/templates?use=${template.id}`)}`);
         return;
@@ -31,9 +28,8 @@ export function useCreateResume() {
         notify('开通会员即可使用这套模板');
         return;
       }
-      mutate(template);
-    },
-    [user, navigate, mutate],
+      await runAsync(template).catch(() => undefined);
+    }),
   );
-  return { createResume, isPending };
+  return { createResume, loading };
 }

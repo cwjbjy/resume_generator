@@ -13,10 +13,12 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class PaymentService {
   private final OrderMapper orderMapper;
   private final PlanMapper planMapper;
@@ -24,21 +26,6 @@ public class PaymentService {
   private final OrderService orderService;
   private final PaymentSignatureService signatureService;
   private final PaymentLogService paymentLogService;
-
-  public PaymentService(
-      OrderMapper orderMapper,
-      PlanMapper planMapper,
-      UserMapper userMapper,
-      OrderService orderService,
-      PaymentSignatureService signatureService,
-      PaymentLogService paymentLogService) {
-    this.orderMapper = orderMapper;
-    this.planMapper = planMapper;
-    this.userMapper = userMapper;
-    this.orderService = orderService;
-    this.signatureService = signatureService;
-    this.paymentLogService = paymentLogService;
-  }
 
   @Transactional
   public String callback(PaymentCallback callback, String signature) {

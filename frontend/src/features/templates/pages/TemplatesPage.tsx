@@ -1,5 +1,5 @@
+import { useSetState, useTimeout } from 'ahooks';
 import { Search, ShieldCheck } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
 import { ErrorBox } from '../../../components/ui/ErrorBox';
@@ -14,15 +14,17 @@ import { useCreateResume } from '../hooks/useCreateResume';
 import { useTemplates } from '../hooks/useTemplates';
 
 export function TemplatesPage() {
-  const { data, error, isPending: templatesPending, refetch } = useTemplates();
-  const { createResume, isPending } = useCreateResume();
+  const { data, error, loading: templatesLoading, refresh } = useTemplates();
+  const { createResume, loading: creating } = useCreateResume();
   const user = useSession((state) => state.user);
   const navigate = useNavigate();
-  const [filter, setFilter] = useState('all');
-  const [category, setCategory] = useState('全部');
-  const [search, setSearch] = useState('');
+  const [{ filter, category, search }, setFilters] = useSetState({
+    filter: 'all',
+    category: '全部',
+    search: '',
+  });
   const [params, setParams] = useSearchParams();
-  const handledTemplate = useRef(false);
+  const templateId = params.get('use');
   const templates = data ?? [];
   const visible = templates.filter(
     (template) =>
@@ -31,19 +33,18 @@ export function TemplatesPage() {
       (template.name + template.category).includes(search.trim()),
   );
 
-  useEffect(() => {
-    const templateId = params.get('use');
-    if (!templateId || !user || !data || handledTemplate.current) return;
-    handledTemplate.current = true;
-    setParams({}, { replace: true });
-    const template = data.find((item) => item.id === Number(templateId));
-    if (template) createResume(template);
-  }, [params, user, data, setParams, createResume]);
+  useTimeout(
+    () => {
+      if (!templateId || !user || !data) return;
+      setParams({}, { replace: true });
+      const template = data.find((item) => item.id === Number(templateId));
+      if (template) void createResume(template);
+    },
+    templateId && user && data ? 0 : undefined,
+  );
 
   function resetFilters() {
-    setSearch('');
-    setCategory('全部');
-    setFilter('all');
+    setFilters({ search: '', category: '全部', filter: 'all' });
   }
   return (
     <main className="template-page">
@@ -57,28 +58,32 @@ export function TemplatesPage() {
           <p>4 套原创设计 · 为不同阶段的你而准备</p>
         </div>
         <div className="catalog-layout">
-          <TemplateCategories category={category} onSelect={setCategory} templates={templates} />
+          <TemplateCategories
+            category={category}
+            onSelect={(category) => setFilters({ category })}
+            templates={templates}
+          />
           <div className="catalog-main">
             <TemplateFilters
               filter={filter}
-              onFilterChange={setFilter}
+              onFilterChange={(filter) => setFilters({ filter })}
               search={search}
-              onSearchChange={setSearch}
+              onSearchChange={(search) => setFilters({ search })}
             />
-            {error && <ErrorBox error={error} retry={() => void refetch()} />}
-            {templatesPending && <Loading />}
+            {error && <ErrorBox error={error} retry={refresh} />}
+            {templatesLoading && <Loading />}
             <div className="template-grid">
               {visible.map((template) => (
                 <TemplateCard
                   key={template.id}
                   template={template}
-                  busy={isPending}
+                  busy={creating}
                   onUse={() => createResume(template)}
                   onPreview={() => navigate(`/templates/${template.id}`)}
                 />
               ))}
             </div>
-            {!templatesPending && !visible.length && (
+            {!templatesLoading && !visible.length && (
               <div className="empty-state">
                 <Search size={30} />
                 <h3>暂时没有匹配的模板</h3>

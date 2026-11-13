@@ -11,24 +11,17 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class ResumeService {
   private final ResumeMapper resumeMapper;
   private final TemplateService templateService;
   private final ResumeContentValidator contentValidator;
-
-  public ResumeService(
-      ResumeMapper resumeMapper,
-      TemplateService templateService,
-      ResumeContentValidator contentValidator) {
-    this.resumeMapper = resumeMapper;
-    this.templateService = templateService;
-    this.contentValidator = contentValidator;
-  }
 
   public List<Resume> list(Long userId) {
     return resumeMapper.selectList(

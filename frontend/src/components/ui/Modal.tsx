@@ -1,5 +1,6 @@
+import { useMount } from 'ahooks';
 import { X } from 'lucide-react';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 
 interface ModalProps {
   title: string;
@@ -9,7 +10,7 @@ interface ModalProps {
 }
 export function Modal({ title, children, onClose, wide = false }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
+  useMount(() => {
     const dialog = dialogRef.current!;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -19,7 +20,7 @@ export function Modal({ title, children, onClose, wide = false }: ModalProps) {
       dialog.close();
       document.body.style.overflow = previousOverflow;
     };
-  }, []);
+  });
   return (
     <dialog
       ref={dialogRef}

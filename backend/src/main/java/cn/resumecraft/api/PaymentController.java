@@ -2,6 +2,7 @@ package cn.resumecraft.api;
 
 import cn.resumecraft.dto.PaymentCallback;
 import cn.resumecraft.service.PaymentService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -10,12 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/pay")
+@RequiredArgsConstructor
 public class PaymentController {
   private final PaymentService paymentService;
-
-  public PaymentController(PaymentService paymentService) {
-    this.paymentService = paymentService;
-  }
 
   @PostMapping("/callback")
   Api<String> callback(

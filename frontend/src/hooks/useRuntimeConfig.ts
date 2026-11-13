@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useRequest } from 'ahooks';
 import { api } from '../lib/http';
 export function useRuntimeConfig() {
-  return useQuery({
-    queryKey: ['config'],
-    queryFn: () => api<{ mockEnabled: boolean }>('GET', '/config'),
+  return useRequest(() => api<{ mockEnabled: boolean }>('GET', '/config'), {
+    cacheKey: 'config',
+    retryCount: 1,
   });
 }

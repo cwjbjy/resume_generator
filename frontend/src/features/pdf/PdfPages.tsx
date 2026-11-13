@@ -1,24 +1,23 @@
+import { useSetState } from 'ahooks';
 import { ExternalLink, Loader2 } from 'lucide-react';
 import { renderPdfPages } from './renderPdfPages';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 export function PdfPages({ url }: { url: string }) {
   const pages = useRef<HTMLDivElement>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [count, setCount] = useState(0);
-  useEffect(
-    () =>
-      renderPdfPages(url, pages.current!, {
-        onPageCount: setCount,
-        onPageRendered: () => setLoading(false),
-        onError: (error) => {
-          setError(error.message);
-          setLoading(false);
-        },
-      }),
-    [url],
-  );
+  const [{ loading, error, count }, setState] = useSetState({
+    loading: true,
+    error: '',
+    count: 0,
+  });
+  useEffect(() => {
+    setState({ loading: true, error: '', count: 0 });
+    return renderPdfPages(url, pages.current!, {
+      onPageCount: (count) => setState({ count }),
+      onPageRendered: () => setState({ loading: false }),
+      onError: (error) => setState({ error: error.message, loading: false }),
+    });
+  }, [url, setState]);
   return (
     <div className="pdf-viewer" aria-label="PDF 文件预览">
       <div className="pdf-viewer-toolbar">

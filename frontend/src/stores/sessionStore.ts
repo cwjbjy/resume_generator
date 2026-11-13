@@ -1,3 +1,4 @@
+import { clearCache } from 'ahooks';
 import { create } from 'zustand';
 import { type User } from '../types';
 interface SessionState {
@@ -20,6 +21,7 @@ function readSession(): Pick<SessionState, 'token' | 'user'> {
 export const useSession = create<SessionState>((set, get) => ({
   ...readSession(),
   login(token, user) {
+    clearCache();
     localStorage.setItem('rc-session', JSON.stringify({ token, user }));
     set({ token, user });
   },
@@ -28,6 +30,7 @@ export const useSession = create<SessionState>((set, get) => ({
     set({ user });
   },
   logout() {
+    clearCache();
     localStorage.removeItem('rc-session');
     set({ token: null, user: null });
   },

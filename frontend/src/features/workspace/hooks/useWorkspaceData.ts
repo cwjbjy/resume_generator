@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useRequest } from 'ahooks';
 import { resumeApi } from '../../../api/resumeApi';
 import { useRuntimeConfig } from '../../../hooks/useRuntimeConfig';
 import { api } from '../../../lib/http';
@@ -7,16 +7,14 @@ import { useTemplates } from '../../templates/hooks/useTemplates';
 
 export type WorkspaceTab = 'resumes' | 'orders' | 'exports';
 export function useWorkspaceData(tab: WorkspaceTab) {
-  const resumes = useQuery({ queryKey: ['resumes'], queryFn: resumeApi.list });
-  const orders = useQuery({
-    queryKey: ['orders'],
-    queryFn: () => api<Order[]>('GET', '/orders'),
-    enabled: tab === 'orders',
+  const resumes = useRequest(resumeApi.list, { retryCount: 1 });
+  const orders = useRequest(() => api<Order[]>('GET', '/orders'), {
+    ready: tab === 'orders',
+    retryCount: 1,
   });
-  const exports = useQuery({
-    queryKey: ['exports'],
-    queryFn: () => api<ExportLog[]>('GET', '/exports/logs'),
-    enabled: tab === 'exports',
+  const exports = useRequest(() => api<ExportLog[]>('GET', '/exports/logs'), {
+    ready: tab === 'exports',
+    retryCount: 1,
   });
   const templates = useTemplates();
   const config = useRuntimeConfig();

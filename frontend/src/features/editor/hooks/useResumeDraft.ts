@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useDebounceEffect, useEventListener, useMemoizedFn, useMount } from 'ahooks';
+import { useRef, useState } from 'react';
 import { resumeApi } from '../../../api/resumeApi';
 import { notify } from '../../../stores/noticeStore';
 import type { Resume } from '../../../types';
@@ -29,34 +30,31 @@ export function useResumeDraft(initialResume: Resume, userId: number) {
   const version = useRef(initialResume.version);
   const pendingSave = useRef<Promise<void> | null>(null);
 
-  useEffect(() => {
+  useMount(() => {
     if (draftRecovery.readFailed) notify('本地草稿无法读取，已加载服务器版本');
-  }, [draftRecovery.readFailed]);
+  });
 
-  const change = useCallback(
-    (next: Resume) => {
-      currentResume.current = next;
-      revision.current += 1;
-      setResume(next);
-      setStatus('有未保存的更改');
-      setError('');
-      try {
-        const draft: LocalDraft = {
-          title: next.title,
-          templateId: next.templateId,
-          content: next.content,
-          baseVersion: version.current,
-          savedAt: Date.now(),
-        };
-        localStorage.setItem(storageKey, JSON.stringify(draft));
-      } catch {
-        notify('浏览器本地存储已满，请及时保存简历');
-      }
-    },
-    [storageKey],
-  );
+  const change = useMemoizedFn((next: Resume) => {
+    currentResume.current = next;
+    revision.current += 1;
+    setResume(next);
+    setStatus('有未保存的更改');
+    setError('');
+    try {
+      const draft: LocalDraft = {
+        title: next.title,
+        templateId: next.templateId,
+        content: next.content,
+        baseVersion: version.current,
+        savedAt: Date.now(),
+      };
+      localStorage.setItem(storageKey, JSON.stringify(draft));
+    } catch {
+      notify('浏览器本地存储已满，请及时保存简历');
+    }
+  });
 
-  const flush = useCallback(async () => {
+  const flush = useMemoizedFn(async () => {
     if (pendingSave.current) return pendingSave.current;
     async function saveChanges() {
       while (savedRevision.current < revision.current) {
@@ -93,34 +91,29 @@ export function useResumeDraft(initialResume: Resume, userId: number) {
     } finally {
       pendingSave.current = null;
     }
-  }, [storageKey]);
+  });
 
-  const save = useCallback(async () => {
+  const save = useMemoizedFn(async () => {
     await flush();
     return { ...currentResume.current, version: version.current };
-  }, [flush]);
+  });
 
-  useEffect(() => {
-    if (localDraft || revision.current === savedRevision.current) return;
-    const timer = setTimeout(() => void flush().catch(() => {}), 800);
-    return () => clearTimeout(timer);
-  }, [resume, localDraft, flush]);
+  useDebounceEffect(
+    () => {
+      if (localDraft || revision.current === savedRevision.current) return;
+      void flush().catch(() => {});
+    },
+    [resume, localDraft],
+    { wait: 800 },
+  );
 
-  useEffect(() => {
-    const beforeUnload = (event: BeforeUnloadEvent) => {
-      if (revision.current > savedRevision.current) {
-        event.preventDefault();
-        event.returnValue = '';
-      }
-    };
-    const retrySave = () => void flush().catch(() => {});
-    window.addEventListener('beforeunload', beforeUnload);
-    window.addEventListener('online', retrySave);
-    return () => {
-      window.removeEventListener('beforeunload', beforeUnload);
-      window.removeEventListener('online', retrySave);
-    };
-  }, [flush]);
+  useEventListener('beforeunload', (event) => {
+    if (revision.current > savedRevision.current) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+  });
+  useEventListener('online', () => void flush().catch(() => {}));
 
   function restoreDraft() {
     if (!localDraft) return;

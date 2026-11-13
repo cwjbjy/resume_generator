@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useRequest } from 'ahooks';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ErrorBox } from '../../../components/ui/ErrorBox';
 import { Loading } from '../../../components/ui/Loading';
@@ -10,18 +10,18 @@ import { useCreateResume } from '../hooks/useCreateResume';
 export function TemplateDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { createResume, isPending } = useCreateResume();
-  const { data, error, isLoading } = useQuery({
-    queryKey: ['template', id],
-    queryFn: () => api<Template>('GET', `/templates/${id}`),
+  const { createResume, loading: creating } = useCreateResume();
+  const { data, error, loading } = useRequest(() => api<Template>('GET', `/templates/${id}`), {
+    refreshDeps: [id],
+    retryCount: 1,
   });
-  if (isLoading) return <Loading />;
-  if (!data) return <ErrorBox error={error} />;
+  if (error) return <ErrorBox error={error} />;
+  if (loading || !data || String(data.id) !== id) return <Loading />;
   return (
     <main className="page-shell">
       <TemplateModal
         template={data}
-        busy={isPending}
+        busy={creating}
         onUse={() => createResume(data)}
         onClose={() => navigate('/templates')}
       />

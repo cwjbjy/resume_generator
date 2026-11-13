@@ -99,7 +99,7 @@ docker compose up --build -d
 | 导出     | 4 套模板真实 PDF、A4 自动分页、内置静态中文字体、免费水印、PDF.js 逐页预览与下载、导出记录                                                    |
 | 权益     | 免费每天 1 次（按服务器自然日重置）；会员不限次数；会员状态实时查库                                                                           |
 | 支付     | 月度 19.9 元 / 30 天、年度 99 元 / 365 天；服务端定价、下单幂等、15 分钟过期、模拟支付、HMAC 验签、金额校验、并发回调幂等、续期叠加、退款演示 |
-| 工程     | Spring Boot 3.5 · MyBatis-Plus · Flyway · React 19 · TypeScript · Vite 6 · Tailwind 4 · TanStack Query · zustand · Docker Compose · CI        |
+| 工程     | Spring Boot 3.5 · MyBatis-Plus · Flyway · React 19 · TypeScript · Vite 6 · Tailwind 4 · ahooks · zustand · Docker Compose · CI                |
 
 编辑器面向桌面（最小宽度 1024px），模板、登录、会员、个人中心提供窄屏布局；HTML 预览与 PDF 导出共用同一模块顺序和内容结构。
 
