@@ -1,5 +1,6 @@
 package cn.resumecraft;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -58,7 +59,11 @@ abstract class ApiTestSupport {
             null,
             Map.of("username", name, "password", "test123456"),
             200);
-    return new Account(data.path("user").path("id").asLong(), data.path("token").asText());
+    assertThat(data.size()).isEqualTo(3);
+    assertThat(data.hasNonNull("token")).isTrue();
+    assertThat(data.hasNonNull("id")).isTrue();
+    assertThat(data.hasNonNull("username")).isTrue();
+    return new Account(data.path("id").asLong(), data.path("token").asText());
   }
 
   JsonNode call(String method, String path, Account user, Object body, int status)

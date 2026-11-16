@@ -3,8 +3,8 @@ import { useSession } from '../../../stores/sessionStore';
 import { type User } from '../../../types';
 
 export const userApi = {
-  current() {
-    return api<User>('GET', '/users/me');
+  current(token?: string) {
+    return api<User>('GET', '/users/me', undefined, token);
   },
   updateProfile(profile: Pick<User, 'nickname' | 'email'>) {
     return api<User>('PUT', '/users/me', profile);
@@ -14,10 +14,11 @@ export const userApi = {
 let latestRefresh = 0;
 
 export async function refreshUser() {
-  const token = useSession.getState().token;
+  const { token } = useSession.getState();
   const refreshVersion = ++latestRefresh;
-  const user = await userApi.current();
-  if (token && useSession.getState().token === token && refreshVersion === latestRefresh) {
+  if (!token) return;
+  const user = await userApi.current(token);
+  if (useSession.getState().token === token && refreshVersion === latestRefresh) {
     useSession.getState().update(user);
   }
   return user;

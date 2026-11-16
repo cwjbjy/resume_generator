@@ -5,19 +5,23 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
-  @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+  @ExceptionHandler(NoResourceFoundException.class)
   ResponseEntity<ApiResponse<Void>> missing(Exception e) {
     return ResponseEntity.status(404).body(new ApiResponse<>(404, "接口或资源不存在", null));
   }
 
-  @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+  @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
   ResponseEntity<ApiResponse<Void>> method(Exception e) {
     return ResponseEntity.status(405).body(new ApiResponse<>(405, "请求方法不支持", null));
   }
@@ -25,6 +29,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(BizException.class)
   ResponseEntity<ApiResponse<Void>> business(BizException e) {
     return ResponseEntity.status(e.status).body(new ApiResponse<>(e.status, e.getMessage(), null));
+  }
+
+  @ExceptionHandler(BadCredentialsException.class)
+  ResponseEntity<ApiResponse<Void>> authentication(BadCredentialsException e) {
+    return ResponseEntity.status(401).body(new ApiResponse<>(401, "用户名或密码错误", null));
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -37,7 +46,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler({
     HttpMessageNotReadableException.class,
-    org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class
+    MethodArgumentTypeMismatchException.class
   })
   ResponseEntity<ApiResponse<Void>> malformed(Exception e) {
     return ResponseEntity.badRequest().body(new ApiResponse<>(400, "请求格式不正确", null));

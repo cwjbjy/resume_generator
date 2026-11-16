@@ -4,6 +4,7 @@ import cn.resumecraft.common.ApiResponse;
 import cn.resumecraft.dto.MockPaymentRequest;
 import cn.resumecraft.dto.PaymentCallback;
 import cn.resumecraft.entity.Order;
+import cn.resumecraft.security.LoginUser;
 import cn.resumecraft.service.OrderService;
 import cn.resumecraft.service.PaymentService;
 import cn.resumecraft.service.PaymentSignatureService;
@@ -11,7 +12,7 @@ import jakarta.validation.Valid;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,8 +30,9 @@ public class MockPaymentController {
 
   @PostMapping("/pay/mock")
   ApiResponse<Order> mock(
-      Authentication authentication, @Valid @RequestBody MockPaymentRequest request) {
-    Long userId = (Long) authentication.getPrincipal();
+      @AuthenticationPrincipal LoginUser loginUser,
+      @Valid @RequestBody MockPaymentRequest request) {
+    Long userId = loginUser.userId();
     Order order = orderService.owned(userId, request.orderId());
     PaymentCallback callback =
         new PaymentCallback(
@@ -44,7 +46,7 @@ public class MockPaymentController {
   }
 
   @PostMapping("/orders/{id}/refund")
-  ApiResponse<Order> refund(Authentication authentication, @PathVariable Long id) {
-    return ApiResponse.ok(paymentService.refund((Long) authentication.getPrincipal(), id));
+  ApiResponse<Order> refund(@AuthenticationPrincipal LoginUser loginUser, @PathVariable Long id) {
+    return ApiResponse.ok(paymentService.refund(loginUser.userId(), id));
   }
 }

@@ -30,7 +30,7 @@ class ExportFlowTest extends ApiTestSupport {
             () -> {
               try {
                 return exportService.reserve(a.id(), rid).id;
-              } catch (cn.resumecraft.exception.BizException e) {
+              } catch (BizException e) {
                 return -1L;
               }
             });

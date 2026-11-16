@@ -1,5 +1,6 @@
 package cn.resumecraft.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
@@ -33,13 +34,9 @@ public class TokenService {
         .compact();
   }
 
-  public Long parse(String token) {
-    return Long.valueOf(
-        Jwts.parser()
-            .verifyWith(signingKey)
-            .build()
-            .parseSignedClaims(token)
-            .getPayload()
-            .getSubject());
+  public LoginUser parse(String token) {
+    Claims claims =
+        Jwts.parser().verifyWith(signingKey).build().parseSignedClaims(token).getPayload();
+    return new LoginUser(Long.valueOf(claims.getSubject()), claims.get("username", String.class));
   }
 }

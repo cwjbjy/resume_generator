@@ -6,19 +6,22 @@ import cn.resumecraft.dto.AuthResponse;
 import cn.resumecraft.dto.CredentialsRequest;
 import cn.resumecraft.entity.User;
 import cn.resumecraft.mapper.UserMapper;
+import cn.resumecraft.security.AccountDetails;
 import cn.resumecraft.security.TokenService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-  private static final String UNKNOWN_USER_HASH =
-      "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
+  private final AuthenticationManager authenticationManager;
   private final UserMapper userMapper;
   private final PasswordEncoder passwordEncoder;
   private final TokenService tokenService;
@@ -38,23 +41,20 @@ public class AuthService {
     user.passwordHash = passwordEncoder.encode(credentials.password());
     user.createdAt = LocalDateTime.now();
     userMapper.insert(user);
-    return authenticated(user);
+    return new AuthResponse(tokenService.create(user.id, user.username), user.id, user.username);
   }
 
   public AuthResponse login(CredentialsRequest credentials) {
     validatePasswordLength(credentials.password());
-    User user =
-        userMapper.selectOne(
-            new LambdaQueryWrapper<User>().eq(User::getUsername, credentials.username()));
-    // Keep a BCrypt check on unknown usernames to avoid a timing-based distinction.
-    String passwordHash = user == null ? UNKNOWN_USER_HASH : user.passwordHash;
-    boolean passwordMatches = passwordEncoder.matches(credentials.password(), passwordHash);
-    require(user != null && passwordMatches, 401, "用户名或密码错误");
-    return authenticated(user);
-  }
-
-  private AuthResponse authenticated(User user) {
-    return new AuthResponse(tokenService.create(user.id, user.username), user);
+    Authentication authentication =
+        authenticationManager.authenticate(
+            UsernamePasswordAuthenticationToken.unauthenticated(
+                credentials.username(), credentials.password()));
+    AccountDetails account = (AccountDetails) authentication.getPrincipal();
+    return new AuthResponse(
+        tokenService.create(account.getId(), account.getUsername()),
+        account.getId(),
+        account.getUsername());
   }
 
   private void validatePasswordLength(String password) {

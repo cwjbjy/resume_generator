@@ -4,7 +4,7 @@ const http = axios.create({ baseURL: '/api', timeout: 15000 });
 
 http.interceptors.request.use((config) => {
   const token = useSession.getState().token;
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token && !config.headers.Authorization) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
@@ -32,7 +32,17 @@ http.interceptors.response.use(
   },
 );
 
-export async function api<T>(method: string, url: string, data?: unknown): Promise<T> {
-  const response = await http.request<{ data: T }>({ method, url, data });
+export async function api<T>(
+  method: string,
+  url: string,
+  data?: unknown,
+  token?: string,
+): Promise<T> {
+  const response = await http.request<{ data: T }>({
+    method,
+    url,
+    data,
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
   return response.data.data;
 }

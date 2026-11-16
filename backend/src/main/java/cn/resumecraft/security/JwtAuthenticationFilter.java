@@ -23,9 +23,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     String authorization = request.getHeader("Authorization");
     if (authorization != null && authorization.startsWith("Bearer ")) {
       try {
-        Long userId = tokenService.parse(authorization.substring(7));
+        LoginUser loginUser = tokenService.parse(authorization.substring(7));
         SecurityContextHolder.getContext()
-            .setAuthentication(new UsernamePasswordAuthenticationToken(userId, null, List.of()));
+            .setAuthentication(
+                UsernamePasswordAuthenticationToken.authenticated(loginUser, null, List.of()));
       } catch (JwtException | IllegalArgumentException invalidToken) {
         SecurityContextHolder.clearContext();
       }
