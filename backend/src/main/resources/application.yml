@@ -24,6 +24,18 @@ app:
   jwt-secret: ${JWT_SECRET:}
   payment-secret: ${PAYMENT_SECRET:}
   jwt-hours: 2
+  ai:
+    api-key: ${DEEPSEEK_API_KEY:}
+    base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+    model: ${DEEPSEEK_MODEL:deepseek-flash}
+    timeout-seconds: ${DEEPSEEK_TIMEOUT_SECONDS:60}
+  security:
+    login-limit:
+      ip-max-attempts: 60
+      ip-window-seconds: 60
+      account-max-attempts: 10
+      account-window-seconds: 300
+      trusted-proxies: ${LOGIN_TRUSTED_PROXIES:}
 management:
   endpoints:
     web:

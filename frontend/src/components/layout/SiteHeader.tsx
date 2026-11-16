@@ -1,14 +1,34 @@
 import { ArrowUpRight, Crown, LogOut, Menu } from 'lucide-react';
+import { useLockFn, useRequest } from 'ahooks';
 import { useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
 import { notify } from '../../stores/noticeStore';
 import { useSession } from '../../stores/sessionStore';
+import { authApi } from '../../features/auth/api/authApi';
+import { ApiError } from '../../lib/http';
 import { Brand } from './Brand';
 
 export function SiteHeader() {
   const user = useCurrentUser();
-  const logout = useSession((state) => state.logout);
+  const signOut = useRequest(
+    async () => {
+      const token = useSession.getState().token;
+      if (!token) return;
+      try {
+        await authApi.logout(token);
+      } catch (error) {
+        if (!(error instanceof ApiError) || error.status !== 401) throw error;
+      }
+      useSession.getState().sync();
+      if (useSession.getState().token === token) {
+        useSession.getState().logout();
+        notify('已退出登录');
+      }
+    },
+    { manual: true, onError: (error) => notify(error.message) },
+  );
+  const logout = useLockFn(() => signOut.runAsync().catch(() => {}));
   const location = useLocation();
   const [expandedPath, setExpandedPath] = useState<string | null>(null);
   const open = expandedPath === location.pathname;
@@ -38,10 +58,8 @@ export function SiteHeader() {
               <button
                 className="icon-button"
                 aria-label="退出登录"
-                onClick={() => {
-                  logout();
-                  notify('已退出登录');
-                }}
+                disabled={signOut.loading}
+                onClick={() => void logout()}
               >
                 <LogOut size={17} />
               </button>

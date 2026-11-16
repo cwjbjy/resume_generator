@@ -32,10 +32,16 @@ class OrderSnapshotMigrationTest {
             WHERE u.username = 'legacy_user'
             ORDER BY p.sort LIMIT 1
             """);
+        statement.executeUpdate(
+            """
+            INSERT INTO export_logs(user_id, resume_id, template_id, status)
+            SELECT id, 1, 1, 'COMPLETED' FROM users WHERE username = 'legacy_user'
+            """);
         var flyway =
             Flyway.configure()
                 .dataSource(mysql.getJdbcUrl(), mysql.getUsername(), mysql.getPassword())
                 .locations("classpath:db/migration/mysql")
+                .target("3")
                 .load();
         assertThat(flyway.migrate().migrationsExecuted).isEqualTo(1);
         try (var result =
@@ -51,6 +57,21 @@ class OrderSnapshotMigrationTest {
           assertThat(result.getInt(3)).isEqualTo(1500);
         }
         assertThat(flyway.migrate().migrationsExecuted).isZero();
+        var latest =
+            Flyway.configure()
+                .dataSource(mysql.getJdbcUrl(), mysql.getUsername(), mysql.getPassword())
+                .locations("classpath:db/migration/mysql")
+                .load();
+        assertThat(latest.migrate().migrationsExecuted).isEqualTo(1);
+        try (var result =
+            statement.executeQuery(
+                "SELECT content_snapshot, resume_version, status FROM export_logs")) {
+          assertThat(result.next()).isTrue();
+          assertThat(result.getString("content_snapshot")).isNull();
+          assertThat(result.getObject("resume_version")).isNull();
+          assertThat(result.getString("status")).isEqualTo("COMPLETED");
+        }
+        assertThat(latest.migrate().migrationsExecuted).isZero();
       }
     }
   }

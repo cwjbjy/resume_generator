@@ -1,5 +1,5 @@
 import { useBoolean, useLatest, useLockFn, useRequest, useUnmountedRef } from 'ahooks';
-import { Plus } from 'lucide-react';
+import { Plus, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
@@ -73,10 +73,16 @@ export function WorkspacePage() {
           <h1>每一步成长，都在这里。</h1>
           <p>欢迎回来，{user.nickname || user.username}。继续完善你的职业故事。</p>
         </div>
-        <Link className="button primary" to="/templates">
-          <Plus size={17} />
-          新建简历
-        </Link>
+        <div className="ai-action-row">
+          <Link className="button" to="/ai/generate">
+            <Sparkles size={17} />
+            AI 生成简历
+          </Link>
+          <Link className="button primary" to="/templates">
+            <Plus size={17} />
+            新建简历
+          </Link>
+        </div>
       </div>
       <div className="me-layout">
         <ProfileCard user={user} onEdit={openProfile} />

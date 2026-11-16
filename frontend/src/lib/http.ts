@@ -28,6 +28,7 @@ http.interceptors.response.use(
       (error.code === 'ECONNABORTED'
         ? '请求超时，请稍后重试'
         : '暂时无法连接服务，请确认后端已启动');
+    if (error.response?.status === 401) useSession.getState().sync();
     const token = useSession.getState().token;
     const requestAuthorization = error.config?.headers?.Authorization;
     if (
@@ -51,11 +52,13 @@ export async function api<T>(
   url: string,
   data?: unknown,
   token?: string,
+  timeout?: number,
 ): Promise<T> {
   const response = await http.request<{ data: T }>({
     method,
     url,
     data,
+    timeout,
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   return response.data.data;

@@ -7,6 +7,7 @@ interface SessionState {
   login: (token: string, user: User) => void;
   update: (user: User) => void;
   logout: () => void;
+  sync: () => void;
 }
 
 function readSession(): Pick<SessionState, 'token' | 'user'> {
@@ -33,5 +34,10 @@ export const useSession = create<SessionState>((set, get) => ({
     clearCache();
     localStorage.removeItem('rc-session');
     set({ token: null, user: null });
+  },
+  sync() {
+    const session = readSession();
+    if (session.token !== get().token) clearCache();
+    set(session);
   },
 }));

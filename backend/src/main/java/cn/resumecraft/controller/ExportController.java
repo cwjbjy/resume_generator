@@ -31,7 +31,9 @@ public class ExportController {
       @AuthenticationPrincipal LoginUser loginUser,
       @Valid @RequestBody ReserveExportRequest request) {
     return ApiResponse.ok(
-        ExportResponse.from(exportService.reserve(loginUser.userId(), request.resumeId())));
+        ExportResponse.from(
+            exportService.reserve(
+                loginUser.userId(), request.resumeId(), request.resumeVersion())));
   }
 
   @PostMapping("/{id}/complete")

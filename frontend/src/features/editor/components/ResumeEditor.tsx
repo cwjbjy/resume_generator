@@ -7,6 +7,7 @@ import { notify } from '../../../stores/noticeStore';
 import { useSession } from '../../../stores/sessionStore';
 import type { Resume, Template } from '../../../types';
 import { useTemplates } from '../../templates/hooks/useTemplates';
+import { ResumeAiDialog } from '../../ai/components/ResumeAiDialog';
 import { usePdfExport } from '../hooks/usePdfExport';
 import { useResumeDraft } from '../hooks/useResumeDraft';
 import type { EditorModule } from '../model/editorModules';
@@ -32,6 +33,7 @@ export function ResumeEditor({ initialResume }: { initialResume: Resume }) {
   const draft = useResumeDraft(initialResume, user.id);
   const pdf = usePdfExport(draft.save, templates, user.member);
   const [module, setModule] = useState<EditorModule>('basic');
+  const [aiOpen, { setTrue: openAi, setFalse: closeAi }] = useBoolean(false);
   const [switchingTemplate, { setTrue: openTemplateDialog, setFalse: closeTemplateDialog }] =
     useBoolean(false);
   const template = templates.find((item) => item.id === draft.resume.templateId);
@@ -84,6 +86,7 @@ export function ResumeEditor({ initialResume }: { initialResume: Resume }) {
         onSave={() => void save()}
         onSwitchTemplate={openTemplateDialog}
         onExport={() => void pdf.exportPdf()}
+        onAiAssist={openAi}
       />
       {draft.conflicted && (
         <SaveConflictNotice
@@ -126,6 +129,14 @@ export function ResumeEditor({ initialResume }: { initialResume: Resume }) {
         />
       )}
       {pdf.document && <ExportDialog {...pdf.document} onClose={pdf.closePreview} />}
+      {aiOpen && (
+        <ResumeAiDialog
+          resume={draft.resume}
+          save={draft.save}
+          onChange={draft.change}
+          onClose={closeAi}
+        />
+      )}
     </main>
   );
 }

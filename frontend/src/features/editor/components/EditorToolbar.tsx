@@ -1,4 +1,13 @@
-import { ArrowLeft, Cloud, CloudOff, Download, FileText, LayoutTemplate, Save } from 'lucide-react';
+import {
+  ArrowLeft,
+  Cloud,
+  CloudOff,
+  Download,
+  FileText,
+  LayoutTemplate,
+  Save,
+  Sparkles,
+} from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 
 interface EditorToolbarProps {
@@ -11,6 +20,7 @@ interface EditorToolbarProps {
   onSave: () => void;
   onSwitchTemplate: () => void;
   onExport: () => void;
+  onAiAssist: () => void;
 }
 export function EditorToolbar({
   title,
@@ -22,6 +32,7 @@ export function EditorToolbar({
   onSave,
   onSwitchTemplate,
   onExport,
+  onAiAssist,
 }: EditorToolbarProps) {
   return (
     <div className="editor-toolbar">
@@ -43,6 +54,10 @@ export function EditorToolbar({
         </span>
       </div>
       <div className="editor-toolbar-actions">
+        <Button className="small" onClick={onAiAssist}>
+          <Sparkles size={15} />
+          AI 助手
+        </Button>
         <Button className="small" onClick={onSave}>
           <Save size={15} />
           保存

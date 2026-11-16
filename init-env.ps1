@@ -16,6 +16,8 @@ $lines = @(
     "REDIS_PASSWORD=$(New-LocalSecret)"
     "JWT_SECRET=$(New-LocalSecret)"
     "PAYMENT_SECRET=$(New-LocalSecret)"
+    'DEEPSEEK_API_KEY='
+    'DEEPSEEK_MODEL=deepseek-flash'
 )
 $lines | Set-Content -LiteralPath $envFile -Encoding ascii
 Write-Host 'Created .env with random local secrets.'

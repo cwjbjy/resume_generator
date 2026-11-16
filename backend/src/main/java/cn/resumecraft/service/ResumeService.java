@@ -63,6 +63,18 @@ public class ResumeService {
   }
 
   @Transactional
+  public Resume createFromContent(Long userId, Long templateId, String title, JsonNode content) {
+    templateService.checkAccess(userId, templateId);
+    contentValidator.validate(content);
+    Resume resume = newDraft(userId, templateId);
+    resume.title = title;
+    resume.content = content.toString();
+    resumeMapper.insert(resume);
+    templateService.recordUse(templateId);
+    return resume;
+  }
+
+  @Transactional
   public Resume save(Long userId, Long resumeId, SaveResumeRequest request) {
     owned(userId, resumeId);
     templateService.checkAccess(userId, request.templateId());

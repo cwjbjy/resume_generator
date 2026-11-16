@@ -9,6 +9,7 @@ import { TemplateDetailPage } from '../features/templates/pages/TemplateDetailPa
 import { TemplatesPage } from '../features/templates/pages/TemplatesPage';
 import { WorkspacePage } from '../features/workspace/pages/WorkspacePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
+import { AiGeneratePage } from '../features/ai/pages/AiGeneratePage';
 export function App() {
   return (
     <Routes>
@@ -21,6 +22,7 @@ export function App() {
         <Route path="pricing" element={<PricingPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="me" element={<WorkspacePage />} />
+          <Route path="ai/generate" element={<AiGeneratePage />} />
           <Route path="editor/:id" element={<Editor />} />
           <Route path="checkout/:id" element={<CheckoutPage />} />
         </Route>

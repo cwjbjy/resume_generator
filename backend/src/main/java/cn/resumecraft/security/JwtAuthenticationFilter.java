@@ -1,5 +1,8 @@
 package cn.resumecraft.security;
 
+import cn.resumecraft.common.ApiResponse;
+import cn.resumecraft.exception.BizException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,6 +18,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final TokenService tokenService;
+  private final ObjectMapper objectMapper;
+
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    String path = request.getServletPath();
+    return path.equals("/api/auth/login") || path.equals("/api/auth/register");
+  }
 
   @Override
   protected void doFilterInternal(
@@ -29,6 +39,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken.authenticated(loginUser, null, List.of()));
       } catch (JwtException | IllegalArgumentException invalidToken) {
         SecurityContextHolder.clearContext();
+      } catch (BizException unavailable) {
+        SecurityContextHolder.clearContext();
+        response.setStatus(unavailable.status);
+        response.setContentType("application/json;charset=UTF-8");
+        objectMapper.writeValue(
+            response.getWriter(),
+            new ApiResponse<>(unavailable.status, unavailable.getMessage(), null));
+        return;
       }
     }
     chain.doFilter(request, response);

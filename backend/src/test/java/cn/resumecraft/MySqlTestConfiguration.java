@@ -3,6 +3,7 @@ package cn.resumecraft;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 
 @TestConfiguration(proxyBeanMethods = false)
@@ -15,5 +16,11 @@ class MySqlTestConfiguration {
         .withEnv("TZ", "Asia/Shanghai")
         .withUrlParam("serverTimezone", "Asia/Shanghai")
         .withCommand("--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci");
+  }
+
+  @Bean
+  @ServiceConnection(name = "redis")
+  GenericContainer<?> redis() {
+    return new GenericContainer<>("redis:7-alpine").withExposedPorts(6379);
   }
 }

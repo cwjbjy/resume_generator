@@ -28,8 +28,17 @@ public class ExportService {
 
   @Transactional
   public ExportLog reserve(Long userId, Long resumeId) {
+    return reserve(userId, resumeId, null);
+  }
+
+  @Transactional
+  public ExportLog reserve(Long userId, Long resumeId, Integer expectedVersion) {
     User user = userMapper.lock(userId);
     Resume resume = resumeService.owned(userId, resumeId);
+    require(
+        expectedVersion == null || expectedVersion.equals(resume.version),
+        409,
+        "简历已在其他窗口更新，请重新加载后导出");
     templateService.checkAccess(userId, resume.templateId);
     releaseExpiredReservations(userId);
     checkPendingExport(userId);
@@ -41,6 +50,8 @@ public class ExportService {
     log.resumeId = resumeId;
     log.templateId = resume.templateId;
     log.status = "PENDING";
+    log.contentSnapshot = resume.content;
+    log.resumeVersion = resume.version;
     log.createdAt = LocalDateTime.now();
     exportLogMapper.insert(log);
     return log;
@@ -71,6 +82,11 @@ public class ExportService {
         .selectPage(
             new Page<>(page, size),
             new LambdaQueryWrapper<ExportLog>()
+                .select(
+                    ExportLog::getId,
+                    ExportLog::getResumeId,
+                    ExportLog::getCreatedAt,
+                    ExportLog::getStatus)
                 .eq(ExportLog::getUserId, userId)
                 .orderByDesc(ExportLog::getCreatedAt)
                 .orderByDesc(ExportLog::getId))

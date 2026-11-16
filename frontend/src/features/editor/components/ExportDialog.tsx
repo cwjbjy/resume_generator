@@ -1,14 +1,17 @@
 import { Check, Download } from 'lucide-react';
 import { Modal } from '../../../components/ui/Modal';
 import PdfViewer from '../../resumes/pdf/PdfViewer';
+import { ExportAiReview } from '../../ai/components/ExportAiReview';
 
 export function ExportDialog({
   url,
   filename,
+  exportId,
   onClose,
 }: {
   url: string;
   filename: string;
+  exportId: number;
   onClose: () => void;
 }) {
   return (
@@ -24,6 +27,7 @@ export function ExportDialog({
           下载 PDF
         </a>
       </div>
+      <ExportAiReview key={exportId} exportId={exportId} />
     </Modal>
   );
 }

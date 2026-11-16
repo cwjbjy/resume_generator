@@ -39,6 +39,11 @@ services:
       MANAGEMENT_HEALTH_REDIS_ENABLED: "true"
       JWT_SECRET: ${JWT_SECRET:?Run init-env.ps1 first}
       PAYMENT_SECRET: ${PAYMENT_SECRET:?Run init-env.ps1 first}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-flash}
+      DEEPSEEK_TIMEOUT_SECONDS: ${DEEPSEEK_TIMEOUT_SECONDS:-60}
+      LOGIN_TRUSTED_PROXIES: ${LOGIN_TRUSTED_PROXIES:-}
       TZ: Asia/Shanghai
     depends_on:
       mysql: { condition: service_healthy }

@@ -7,6 +7,9 @@ export interface AuthenticationResult {
 }
 
 export const authApi = {
+  logout(token: string) {
+    return api<void>('POST', '/auth/logout', undefined, token);
+  },
   authenticate(credentials: Record<string, FormDataEntryValue>, register: boolean) {
     return api<AuthenticationResult>(
       'POST',

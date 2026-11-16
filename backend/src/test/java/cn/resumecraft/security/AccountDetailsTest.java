@@ -39,7 +39,10 @@ class AccountDetailsTest {
           assertThat(details.getUsername()).isEqualTo("developer01");
           assertThat(details.getPassword()).isEqualTo(passwordHash);
         });
-    TokenService tokens = new TokenService("test-jwt-secret-for-account-details-mapping", 2);
+    RedisSessionService sessions = mock(RedisSessionService.class);
+    when(sessions.isCurrent(any(), any())).thenReturn(true);
+    TokenService tokens =
+        new TokenService("test-jwt-secret-for-account-details-mapping", 2, sessions);
     AuthService auth = new AuthService(new ProviderManager(provider), users, passwords, tokens);
 
     AuthResponse response = auth.login(new CredentialsRequest("developer01", "test123456", null));

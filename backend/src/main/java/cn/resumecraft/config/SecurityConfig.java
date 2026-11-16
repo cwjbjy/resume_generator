@@ -3,6 +3,7 @@ package cn.resumecraft.config;
 import cn.resumecraft.security.JwtAuthenticationFilter;
 import cn.resumecraft.security.TokenService;
 import cn.resumecraft.security.UnauthorizedEntryPoint;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,7 +18,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class SecurityConfig {
   private static final String[] PUBLIC_ENDPOINTS = {
-    "/api/auth/**",
+    "/api/auth/register",
+    "/api/auth/login",
     "/api/templates/**",
     "/api/plans",
     "/api/config",
@@ -43,7 +45,10 @@ public class SecurityConfig {
 
   @Bean
   SecurityFilterChain securityFilterChain(
-      HttpSecurity http, TokenService tokenService, UnauthorizedEntryPoint unauthorizedEntryPoint)
+      HttpSecurity http,
+      TokenService tokenService,
+      UnauthorizedEntryPoint unauthorizedEntryPoint,
+      ObjectMapper objectMapper)
       throws Exception {
     return http.csrf(csrf -> csrf.disable())
         .sessionManagement(
@@ -53,7 +58,8 @@ public class SecurityConfig {
                 requests.requestMatchers(PUBLIC_ENDPOINTS).permitAll().anyRequest().authenticated())
         .exceptionHandling(errors -> errors.authenticationEntryPoint(unauthorizedEntryPoint))
         .addFilterBefore(
-            new JwtAuthenticationFilter(tokenService), UsernamePasswordAuthenticationFilter.class)
+            new JwtAuthenticationFilter(tokenService, objectMapper),
+            UsernamePasswordAuthenticationFilter.class)
         .build();
   }
 }

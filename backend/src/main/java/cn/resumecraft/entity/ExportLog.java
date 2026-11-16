@@ -13,5 +13,7 @@ public class ExportLog {
   public Long resumeId;
   public Long templateId;
   public String status;
+  public String contentSnapshot;
+  public Integer resumeVersion;
   public LocalDateTime createdAt;
 }

@@ -21,15 +21,25 @@ async function generatePdf(resume: Resume, template: Template, watermark: boolea
   }
 }
 
-export async function exportResumePdf(resume: Resume, template: Template, watermark: boolean) {
-  const reservation = await exportApi.reserve(resume.id);
+export async function exportResumePdf(
+  resume: Resume,
+  template: Template,
+  watermark: boolean,
+  token: string,
+  isCurrent: () => boolean,
+) {
+  if (!isCurrent()) throw new Error('登录状态已变化，导出已取消');
+  const reservation = await exportApi.reserve(resume.id, resume.version, token);
   try {
+    if (!isCurrent()) throw new Error('登录状态已变化，导出已取消');
     const blob = await generatePdf(resume, template, watermark);
-    const result = await exportApi.complete(reservation.id, true);
+    if (!isCurrent()) throw new Error('登录状态已变化，导出已取消');
+    const result = await exportApi.complete(reservation.id, true, token);
     if (result.status !== 'COMPLETED') throw new Error('导出未完成，请重试');
-    return blob;
+    if (!isCurrent()) throw new Error('登录状态已变化，导出已取消');
+    return { blob, exportId: reservation.id };
   } catch (error) {
-    await exportApi.complete(reservation.id, false).catch(() => {});
+    await exportApi.complete(reservation.id, false, token).catch(() => {});
     throw error;
   }
 }
