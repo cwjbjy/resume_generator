@@ -22,12 +22,12 @@ export function DraftRecoveryDialog({
         检测到 {new Date(draft.savedAt).toLocaleString('zh-CN')}{' '}
         保存的本地草稿。可以恢复后继续编辑，或使用服务器版本。
         {draft.baseVersion !== serverVersion &&
-          ' 服务器版本也有更新，恢复会以本地内容替换当前内容。'}
+          ' 服务器版本已有更新。选择更新服务器会将这份草稿保存到当前服务器版本，请先确认内容。'}
       </p>
       <div className="modal-actions">
         <Button onClick={onDiscard}>使用服务器版本</Button>
         <Button className="primary" onClick={onRestore}>
-          恢复本地草稿
+          {draft.baseVersion === serverVersion ? '恢复本地草稿' : '用草稿更新服务器'}
         </Button>
       </div>
     </Modal>

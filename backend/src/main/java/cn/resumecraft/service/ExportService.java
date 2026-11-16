@@ -2,6 +2,7 @@ package cn.resumecraft.service;
 
 import static cn.resumecraft.exception.BizException.require;
 
+import cn.resumecraft.dto.ExportResponse;
 import cn.resumecraft.entity.ExportLog;
 import cn.resumecraft.entity.Resume;
 import cn.resumecraft.entity.User;
@@ -9,9 +10,10 @@ import cn.resumecraft.mapper.ExportLogMapper;
 import cn.resumecraft.mapper.UserMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,12 +66,15 @@ public class ExportService {
     return exportLogMapper.selectById(exportId);
   }
 
-  public List<ExportLog> history(Long userId) {
-    return exportLogMapper.selectList(
-        new LambdaQueryWrapper<ExportLog>()
-            .eq(ExportLog::getUserId, userId)
-            .orderByDesc(ExportLog::getCreatedAt)
-            .last("LIMIT 100"));
+  public IPage<ExportResponse> history(Long userId, int page, int size) {
+    return exportLogMapper
+        .selectPage(
+            new Page<>(page, size),
+            new LambdaQueryWrapper<ExportLog>()
+                .eq(ExportLog::getUserId, userId)
+                .orderByDesc(ExportLog::getCreatedAt)
+                .orderByDesc(ExportLog::getId))
+        .convert(ExportResponse::from);
   }
 
   private void releaseExpiredReservations(Long userId) {

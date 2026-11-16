@@ -45,17 +45,33 @@ export interface Resume {
   version: number;
   updatedAt: string;
 }
+export interface ResumeSummary {
+  id: number;
+  templateId: number;
+  title: string;
+  version: number;
+  updatedAt: string;
+  basic: Content['basic'];
+}
+export interface PageResult<T> {
+  records: T[];
+  total: number;
+  page: number;
+  size: number;
+}
 export interface Plan {
   id: number;
   name: string;
   price: number;
   durationDays: number;
-  features: string;
+  features: string[];
 }
 export interface Order {
   id: number;
   orderNo: string;
   planId: number;
+  planName: string;
+  durationDays: number;
   amount: number;
   status: string;
   createdAt: string;

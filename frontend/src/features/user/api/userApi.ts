@@ -13,13 +13,13 @@ export const userApi = {
 
 let latestRefresh = 0;
 
-export async function refreshUser() {
+export async function refreshUser(shouldUpdate: () => boolean = () => true) {
   const { token } = useSession.getState();
   const refreshVersion = ++latestRefresh;
   if (!token) return;
   const user = await userApi.current(token);
-  if (useSession.getState().token === token && refreshVersion === latestRefresh) {
+  if (useSession.getState().token === token && refreshVersion === latestRefresh && shouldUpdate()) {
     useSession.getState().update(user);
+    return user;
   }
-  return user;
 }

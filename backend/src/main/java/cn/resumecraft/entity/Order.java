@@ -12,6 +12,8 @@ public class Order {
   public String orderNo;
   public Long userId;
   public Long planId;
+  public String planName;
+  public Integer durationDays;
   public Integer amount;
   public String status;
   public String channel;

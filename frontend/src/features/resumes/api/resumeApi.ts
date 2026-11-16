@@ -1,11 +1,11 @@
 import { api } from '../../../lib/http';
-import { type Resume } from '../../../types';
+import { type PageResult, type Resume, type ResumeSummary } from '../../../types';
 import { normalize } from '../model/normalizeResume';
 type ResumeResponse = Omit<Resume, 'content'> & { content: Resume['content'] | string };
 
 export const resumeApi = {
-  async list() {
-    return (await api<ResumeResponse[]>('GET', '/resumes')).map(normalize);
+  list(page = 1, size = 12) {
+    return api<PageResult<ResumeSummary>>('GET', `/resumes?page=${page}&size=${size}`);
   },
   async get(id: string | number) {
     return normalize(await api<ResumeResponse>('GET', `/resumes/${id}`));

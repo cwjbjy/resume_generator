@@ -2,10 +2,10 @@ import { ArrowRight, Clock3, Copy, Pencil, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ResumePreview } from '../../resumes/components/ResumePreview';
 import { Button } from '../../../components/ui/Button';
-import type { Resume, Template } from '../../../types';
+import type { ResumeSummary, Template } from '../../../types';
 
 interface ResumeCardProps {
-  resume: Resume;
+  resume: ResumeSummary;
   template?: Template;
   busy: boolean;
   onRename: () => void;
@@ -26,7 +26,12 @@ export function ResumeCard({
     <article className="my-resume-card">
       <button className="my-resume-cover" onClick={edit} aria-label={`编辑${resume.title}`}>
         <div className="mini-resume">
-          {template && <ResumePreview content={resume.content} template={template} />}
+          {template && (
+            <ResumePreview
+              content={{ basic: resume.basic, edu: [], work: [], proj: [], skills: [], custom: [] }}
+              template={template}
+            />
+          )}
         </div>
       </button>
       <div className="my-resume-info">

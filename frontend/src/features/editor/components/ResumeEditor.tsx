@@ -16,6 +16,7 @@ import { EditorToolbar } from './EditorToolbar';
 import { ExportDialog } from './ExportDialog';
 import { ModuleNavigation } from './ModuleNavigation';
 import { ResumeForm } from './ResumeForm';
+import { SaveConflictNotice } from './SaveConflictNotice';
 import { TemplateSwitchDialog } from './TemplateSwitchDialog';
 
 export function ResumeEditor({ initialResume }: { initialResume: Resume }) {
@@ -84,12 +85,19 @@ export function ResumeEditor({ initialResume }: { initialResume: Resume }) {
         onSwitchTemplate={openTemplateDialog}
         onExport={() => void pdf.exportPdf()}
       />
+      {draft.conflicted && (
+        <SaveConflictNotice
+          loading={draft.loadingServer}
+          onLoadServer={draft.loadServerVersion}
+          onKeepDraft={() => navigate('/me')}
+        />
+      )}
       <div className="editor-workspace">
         <ModuleNavigation selected={module} onSelect={setModule} />
         <ResumeForm
           module={module}
           content={draft.resume.content}
-          error={draft.error}
+          error={draft.conflicted ? '' : draft.error}
           onChange={(content) => draft.change({ ...draft.resume, content })}
           onRetrySave={() => void save()}
         />
@@ -103,7 +111,7 @@ export function ResumeEditor({ initialResume }: { initialResume: Resume }) {
         <DraftRecoveryDialog
           draft={draft.localDraft}
           serverVersion={draft.serverVersion}
-          onDismiss={draft.dismissDraft}
+          onDismiss={() => navigate('/me')}
           onDiscard={draft.discardDraft}
           onRestore={draft.restoreDraft}
         />

@@ -5,9 +5,10 @@ import { Link } from 'react-router-dom';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { ErrorBox } from '../../../components/ui/ErrorBox';
 import { Loading } from '../../../components/ui/Loading';
+import { Pagination } from '../../../components/ui/Pagination';
 import { notify } from '../../../stores/noticeStore';
 import { useSession } from '../../../stores/sessionStore';
-import type { Order, Resume } from '../../../types';
+import type { Order, ResumeSummary } from '../../../types';
 import { membershipApi } from '../../membership/api/membershipApi';
 import { resumeApi } from '../../resumes/api/resumeApi';
 import { refreshUser, userApi } from '../../user/api/userApi';
@@ -30,8 +31,8 @@ export function WorkspacePage() {
   const [tab, setTab] = useState<WorkspaceTab>('resumes');
   const currentTab = useLatest(tab);
   const unmounted = useUnmountedRef();
-  const [renaming, setRenaming] = useState<Resume | null>(null);
-  const [removing, setRemoving] = useState<Resume | null>(null);
+  const [renaming, setRenaming] = useState<ResumeSummary | null>(null);
+  const [removing, setRemoving] = useState<ResumeSummary | null>(null);
   const [refunding, setRefunding] = useState<Order | null>(null);
   const [editingProfile, { setTrue: openProfile, setFalse: closeProfile }] = useBoolean(false);
   const { resumes, orders, exports, templates, config } = useWorkspaceData(tab);
@@ -62,6 +63,7 @@ export function WorkspacePage() {
     const succeeded = await run(() => userApi.updateProfile(profile), '资料已更新');
     if (succeeded) closeProfile();
   }
+  const activeList = { resumes, orders, exports }[tab];
 
   return (
     <main className="page-shell me-page">
@@ -87,7 +89,7 @@ export function WorkspacePage() {
                 className={item.key === tab ? 'active' : ''}
               >
                 {item.label}
-                {item.key === 'resumes' && <span>{resumes.data?.length || 0}</span>}
+                {item.key === 'resumes' && <span>{resumes.data?.total || 0}</span>}
               </button>
             ))}
           </div>
@@ -96,7 +98,7 @@ export function WorkspacePage() {
               {(resumes.loading || templates.loading) && <Loading />}
               {resumes.error && <ErrorBox error={resumes.error} retry={resumes.refresh} />}
               <div className="my-resume-grid">
-                {resumes.data?.map((resume) => (
+                {resumes.data?.list.map((resume) => (
                   <ResumeCard
                     key={resume.id}
                     resume={resume}
@@ -122,9 +124,9 @@ export function WorkspacePage() {
           {tab === 'orders' && (
             <>
               {orders.loading && <Loading />}
-              {orders.error && <ErrorBox error={orders.error} />}
+              {orders.error && <ErrorBox error={orders.error} retry={orders.refresh} />}
               <OrderList
-                orders={orders.data}
+                orders={orders.data?.list}
                 mockEnabled={Boolean(config.data?.mockEnabled)}
                 onRefund={setRefunding}
               />
@@ -133,10 +135,17 @@ export function WorkspacePage() {
           {tab === 'exports' && (
             <>
               {exports.loading && <Loading />}
-              {exports.error && <ErrorBox error={exports.error} />}
-              <ExportHistory records={exports.data} />
+              {exports.error && <ErrorBox error={exports.error} retry={exports.refresh} />}
+              <ExportHistory records={exports.data?.list} />
             </>
           )}
+          <Pagination
+            current={activeList.pagination.current}
+            totalPage={activeList.pagination.totalPage}
+            total={activeList.pagination.total}
+            loading={activeList.loading}
+            onChange={activeList.pagination.changeCurrent}
+          />
         </section>
       </div>
       {renaming && (
@@ -144,7 +153,12 @@ export function WorkspacePage() {
           title={renaming.title}
           busy={busy}
           onClose={() => setRenaming(null)}
-          onSubmit={(title) => void run(() => resumeApi.save({ ...renaming, title }), '标题已更新')}
+          onSubmit={(title) =>
+            void run(async () => {
+              const resume = await resumeApi.get(renaming.id);
+              return resumeApi.save({ ...resume, title });
+            }, '标题已更新')
+          }
         />
       )}
       {removing && (

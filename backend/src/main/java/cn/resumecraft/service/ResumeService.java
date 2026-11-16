@@ -2,15 +2,20 @@ package cn.resumecraft.service;
 
 import static cn.resumecraft.exception.BizException.require;
 
+import cn.resumecraft.dto.ResumeResponse;
+import cn.resumecraft.dto.ResumeSummaryResponse;
 import cn.resumecraft.dto.SaveResumeRequest;
 import cn.resumecraft.entity.Resume;
 import cn.resumecraft.mapper.ResumeMapper;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
@@ -22,12 +27,16 @@ public class ResumeService {
   private final ResumeMapper resumeMapper;
   private final TemplateService templateService;
   private final ResumeContentValidator contentValidator;
+  private final ObjectMapper objectMapper;
 
-  public List<Resume> list(Long userId) {
-    return resumeMapper.selectList(
-        new LambdaQueryWrapper<Resume>()
-            .eq(Resume::getUserId, userId)
-            .orderByDesc(Resume::getUpdatedAt));
+  public IPage<ResumeSummaryResponse> list(Long userId, int page, int size) {
+    return resumeMapper
+        .selectSummaries(new Page<>(page, size), userId)
+        .convert(resume -> ResumeSummaryResponse.from(resume, readContent(resume.content)));
+  }
+
+  public ResumeResponse response(Resume resume) {
+    return ResumeResponse.from(resume, readContent(resume.content));
   }
 
   public Resume owned(Long userId, Long resumeId) {
@@ -99,5 +108,13 @@ public class ResumeService {
     resume.createdAt = LocalDateTime.now();
     resume.updatedAt = resume.createdAt;
     return resume;
+  }
+
+  private JsonNode readContent(String content) {
+    try {
+      return objectMapper.readTree(content);
+    } catch (JsonProcessingException exception) {
+      throw new IllegalStateException("Unable to read stored resume content", exception);
+    }
   }
 }

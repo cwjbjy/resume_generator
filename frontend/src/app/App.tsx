@@ -16,8 +16,8 @@ export function App() {
         <Route index element={<TemplatesPage />} />
         <Route path="templates" element={<TemplatesPage />} />
         <Route path="templates/:id" element={<TemplateDetailPage />} />
-        <Route path="login" element={<AuthPage />} />
-        <Route path="register" element={<AuthPage register />} />
+        <Route path="login" element={<AuthPage key="login" />} />
+        <Route path="register" element={<AuthPage key="register" register />} />
         <Route path="pricing" element={<PricingPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="me" element={<WorkspacePage />} />

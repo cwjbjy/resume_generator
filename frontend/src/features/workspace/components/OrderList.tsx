@@ -31,7 +31,7 @@ export function OrderList({
             <Crown size={22} />
           </span>
           <div>
-            <b>{o.planId === 1 ? '月度会员' : '年度会员'}</b>
+            <b>{o.planName}</b>
             <small>{o.orderNo}</small>
             <small>{new Date(o.createdAt).toLocaleString('zh-CN')}</small>
           </div>

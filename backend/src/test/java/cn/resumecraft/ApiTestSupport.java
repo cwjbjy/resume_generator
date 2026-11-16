@@ -121,7 +121,7 @@ abstract class ApiTestSupport {
     b.put("title", r.path("title").asText());
     b.put("templateId", r.path("templateId").asLong());
     b.put("version", r.path("version").asInt());
-    b.set("content", json.readTree(r.path("content").asText()));
+    b.set("content", r.path("content").deepCopy());
     return b;
   }
 }

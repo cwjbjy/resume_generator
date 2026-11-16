@@ -1,22 +1,42 @@
-import { useLockFn, useRequest } from 'ahooks';
+import { useBoolean, useLockFn, useRequest } from 'ahooks';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
-import type { FormEvent } from 'react';
+import { type FormEvent, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
 import { notify } from '../../../stores/noticeStore';
 import { useSession } from '../../../stores/sessionStore';
-import { authApi } from '../api/authApi';
+import { ApiError } from '../../../lib/http';
+import { userApi } from '../../user/api/userApi';
+import { authApi, type AuthenticationResult } from '../api/authApi';
 import { AuthStory } from '../components/AuthStory';
 export function AuthPage({ register = false }: { register?: boolean }) {
   const [params] = useSearchParams();
   const redirect = params.get('redirect') || '/me';
   const navigate = useNavigate();
   const login = useSession((s) => s.login);
+  const pending = useRef<AuthenticationResult | null>(null);
+  const [awaitingProfile, { setTrue: waitForProfile, setFalse: resetAuthentication }] =
+    useBoolean(false);
   const authentication = useRequest(
-    (credentials: Record<string, FormDataEntryValue>) =>
-      authApi.authenticate(credentials, register),
+    async (credentials: Record<string, FormDataEntryValue>) => {
+      const result = pending.current ?? (await authApi.authenticate(credentials, register));
+      pending.current = result;
+      waitForProfile();
+      const user = await userApi.current(result.token);
+      return { ...result, user };
+    },
     {
       manual: true,
+      onError(error) {
+        if (pending.current && error instanceof ApiError && error.status === 401) {
+          pending.current = null;
+          resetAuthentication();
+          if (register) {
+            notify('账号已创建，请登录后继续');
+            navigate(`/login?redirect=${encodeURIComponent(redirect)}`, { replace: true });
+          }
+        }
+      },
       onSuccess(result) {
         login(result.token, result.user);
         navigate(redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/me', {
@@ -47,6 +67,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
             用户名
             <input
               name="username"
+              disabled={awaitingProfile || authentication.loading}
               required
               autoComplete="username"
               pattern="[A-Za-z0-9_]{4,32}"
@@ -59,6 +80,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
               邮箱
               <input
                 name="email"
+                disabled={awaitingProfile || authentication.loading}
                 type="email"
                 autoComplete="email"
                 maxLength={120}
@@ -70,6 +92,7 @@ export function AuthPage({ register = false }: { register?: boolean }) {
             密码
             <input
               name="password"
+              disabled={awaitingProfile || authentication.loading}
               type="password"
               required
               minLength={6}
@@ -80,11 +103,13 @@ export function AuthPage({ register = false }: { register?: boolean }) {
           </label>
           {authentication.error && !authentication.loading && (
             <div className="inline-error" role="alert">
+              {awaitingProfile && (register ? '账号已创建，' : '认证已成功，')}
               {authentication.error.message}
             </div>
           )}
           <Button busy={authentication.loading} className="primary full" type="submit">
-            {register ? '免费注册' : '登录'} <ArrowRight size={16} />
+            {awaitingProfile ? '重试加载资料' : register ? '免费注册' : '登录'}{' '}
+            <ArrowRight size={16} />
           </Button>
           <p className="auth-switch">
             {register ? '已经有账号？' : '还没有账号？'}

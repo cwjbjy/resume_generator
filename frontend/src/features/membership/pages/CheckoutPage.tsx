@@ -1,5 +1,6 @@
-import { useCountDown, useLockFn, useRequest, useUnmountedRef } from 'ahooks';
+import { useCountDown, useLatest, useLockFn, useRequest, useUnmountedRef } from 'ahooks';
 import { CheckCircle2, ShieldCheck } from 'lucide-react';
+import { useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ErrorBox } from '../../../components/ui/ErrorBox';
 import { Loading } from '../../../components/ui/Loading';
@@ -13,37 +14,97 @@ import { checkoutTitle } from '../utils/checkoutTitle';
 import { statusText } from '../utils/orderStatus';
 export function CheckoutPage() {
   const { id } = useParams();
+  const token = useSession((session) => session.token);
+  const currentContext = useLatest({ id, token });
   const unmounted = useUnmountedRef();
+  // 会员资料刷新的状态机：每次只跟踪最近一个订单的刷新进度。
+  // key = token:orderId，用于隔离不同账号/订单的轮询上下文。
+  const refreshState = useRef<{ key: string | null; phase: 'idle' | 'refreshing' | 'done' }>({
+    key: null,
+    phase: 'idle',
+  });
   const { data, error, loading, refreshAsync, cancel } = useRequest(
-    () => membershipApi.getOrder(id),
+    async () => ({
+      order: await membershipApi.getOrder(id, token ?? undefined),
+      orderId: id,
+      token,
+    }),
     {
-      refreshDeps: [id],
+      refreshDeps: [id, token],
       retryCount: 1,
       pollingInterval: 3000,
       pollingWhenHidden: false,
-      onSuccess(order) {
-        if (order.status !== 'CREATED') cancel();
+      onSuccess(result) {
+        // 三重上下文校验：轮询是长生命周期异步，迟到响应不得污染已切换的页面/会话。
+        // currentContext 是渲染时快照，getState() 是实时读取，两者都查才能拦住窗口期内的变化。
+        const isCurrent = () =>
+          !unmounted.current &&
+          currentContext.current.id === result.orderId &&
+          currentContext.current.token === result.token &&
+          useSession.getState().token === result.token;
+        if (!isCurrent()) return;
+        // 未支付：CREATED 继续轮询等待；进入其他终态则停止。
+        if (result.order.status !== 'PAID') {
+          if (result.order.status !== 'CREATED') cancel();
+          return;
+        }
+        // 已支付：刷新会员资料后停止轮询。每个订单只刷新一次（done），
+        // 刷新进行中不重复触发（refreshing）；key 隔离不同订单/账号的上下文。
+        const key = `${result.token}:${result.order.id}`;
+        const refresh = refreshState.current;
+        if (refresh.key === key && refresh.phase === 'done') {
+          cancel();
+          return;
+        }
+        if (refresh.key === key && refresh.phase === 'refreshing') return;
+        refresh.key = key;
+        refresh.phase = 'refreshing';
+        void refreshUser(isCurrent)
+          .then((user) => {
+            if (!user || !isCurrent()) return;
+            if (refreshState.current.key === key) refreshState.current.phase = 'done';
+            cancel();
+          })
+          .catch(() => {
+            // Keep polling so a temporary profile failure can recover.
+          })
+          .finally(() => {
+            // 仅当状态未被后续订单覆盖时复位，避免误清新订单的进度。
+            if (refreshState.current.key === key && refreshState.current.phase === 'refreshing') {
+              refreshState.current = { key: null, phase: 'idle' };
+            }
+          });
       },
     },
   );
-  const order = data?.id === Number(id) ? data : undefined;
+  const order = data?.order.id === Number(id) && data.token === token ? data.order : undefined;
   const [remainingTime] = useCountDown({ targetDate: order?.expiredAt });
   const config = useRuntimeConfig();
   const payment = useRequest(
     async (success: boolean) => {
-      const token = useSession.getState().token;
-      await membershipApi.mockPayment(Number(id), success);
-      if (unmounted.current || useSession.getState().token !== token) return success;
-      await refreshAsync();
-      if (success) {
-        await refreshUser();
+      const orderId = id;
+      const requestToken = useSession.getState().token;
+      await membershipApi.mockPayment(Number(orderId), success, requestToken ?? undefined);
+      if (
+        !unmounted.current &&
+        currentContext.current.id === orderId &&
+        useSession.getState().token === requestToken
+      ) {
+        await refreshAsync();
       }
-      return success;
+      return { success, orderId, token: requestToken };
     },
     {
       manual: true,
-      onSuccess(success) {
-        notify(success ? '会员已开通，所有模板已解锁' : '已模拟支付失败，订单仍可重试');
+      onSuccess(result) {
+        if (
+          unmounted.current ||
+          currentContext.current.id !== result.orderId ||
+          useSession.getState().token !== result.token
+        ) {
+          return;
+        }
+        notify(result.success ? '会员已开通，所有模板已解锁' : '已模拟支付失败，订单仍可重试');
       },
       onError(error) {
         notify(error.message);
@@ -82,7 +143,9 @@ export function CheckoutPage() {
           </div>
           <div>
             <dt>会员套餐</dt>
-            <dd>{order.planId === 1 ? '月度会员 · 30 天' : '年度会员 · 365 天'}</dd>
+            <dd>
+              {order.planName} · {order.durationDays} 天
+            </dd>
           </div>
           <div>
             <dt>订单状态</dt>

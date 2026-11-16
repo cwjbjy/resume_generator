@@ -7,6 +7,7 @@ import cn.resumecraft.entity.ExportLog;
 import cn.resumecraft.entity.Order;
 import cn.resumecraft.exception.BizException;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -126,5 +127,36 @@ class ExportFlowTest extends ApiTestSupport {
     long secondResumeId = resume(secondUser, freeTemplateId()).path("id").asLong();
     exportService.reserve(firstUser.id(), firstResumeId);
     call("POST", "/api/exports", secondUser, Map.of("resumeId", secondResumeId), 200);
+  }
+
+  @Test
+  void exportHistoryCanPageBeyondOneHundredRecordsWithoutExposingInternalFields() throws Exception {
+    Account owner = account();
+    Account other = account();
+    long templateId = freeTemplateId();
+    long resumeId = resume(owner, templateId).path("id").asLong();
+    long oldestId = 0;
+    LocalDateTime createdAt = LocalDateTime.now();
+    for (int index = 0; index < 101; index++) {
+      ExportLog log = new ExportLog();
+      log.userId = owner.id();
+      log.resumeId = resumeId;
+      log.templateId = templateId;
+      log.createdAt = createdAt;
+      log.status = "FAILED";
+      exports.insert(log);
+      if (index == 0) oldestId = log.id;
+    }
+    JsonNode page = call("GET", "/api/exports/logs?page=51&size=2", owner, null, 200);
+    assertThat(page.path("total").asLong()).isEqualTo(101);
+    assertThat(page.path("page").asInt()).isEqualTo(51);
+    assertThat(page.path("records").size()).isEqualTo(1);
+    JsonNode log = page.path("records").get(0);
+    assertThat(log.path("id").asLong()).isEqualTo(oldestId);
+    assertThat(log.path("resumeId").asLong()).isEqualTo(resumeId);
+    assertThat(log.has("userId")).isFalse();
+    assertThat(log.has("templateId")).isFalse();
+    assertThat(call("GET", "/api/exports/logs", other, null, 200).path("total").asLong()).isZero();
+    call("GET", "/api/exports/logs?size=0", owner, null, 400);
   }
 }

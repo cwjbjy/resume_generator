@@ -10,7 +10,7 @@ interface PlanCardProps {
   onBuy: () => void;
 }
 export function PlanCard({ plan, isMember, busy, disabled, onBuy }: PlanCardProps) {
-  const annual = plan.id === 2;
+  const annual = plan.durationDays >= 365;
   return (
     <article className={`price-card ${annual ? 'featured' : ''}`}>
       {annual && <span className="recommend">更受欢迎 · 长期求职准备</span>}
@@ -20,11 +20,11 @@ export function PlanCard({ plan, isMember, busy, disabled, onBuy }: PlanCardProp
       <div className="price">
         <span>¥</span>
         <strong>{plan.price / 100}</strong>
-        <span>/ {plan.durationDays === 30 ? '30 天' : '365 天'}</span>
+        <span>/ {plan.durationDays} 天</span>
       </div>
       <div className="plan-divider" />
       <ul className="check-list">
-        {(JSON.parse(plan.features) as string[]).map((feature) => (
+        {plan.features.map((feature) => (
           <li key={feature}>
             <Check size={17} />
             {feature}

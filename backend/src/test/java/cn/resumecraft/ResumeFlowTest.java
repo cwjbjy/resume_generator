@@ -36,6 +36,9 @@ class ResumeFlowTest extends ApiTestSupport {
     ObjectNode body = saveBody(r);
     body.put("title", "更新后的标题");
     JsonNode updated = call("PUT", path, a, body, 200);
+    assertThat(updated.path("content").isObject()).isTrue();
+    assertThat(updated.has("status")).isFalse();
+    assertThat(updated.has("createdAt")).isFalse();
     assertThat(updated.path("version").asInt()).isEqualTo(1);
     call("PUT", path, a, body, 409);
     body.put("version", 1);
@@ -45,6 +48,54 @@ class ResumeFlowTest extends ApiTestSupport {
     assertThat(copy.path("id")).isNotEqualTo(r.path("id"));
     call("DELETE", path, a, null, 200);
     call("GET", path, a, null, 404);
+  }
+
+  @Test
+  void invalidContentDoesNotReplaceTheStoredResume() throws Exception {
+    Account owner = account();
+    JsonNode original = resume(owner, freeTemplateId());
+    String path = "/api/resumes/" + original.path("id").asLong();
+    ObjectNode missingName = saveBody(original);
+    ((ObjectNode) missingName.path("content").path("basic")).remove("name");
+    call("PUT", path, owner, missingName, 400);
+    ObjectNode nullEntry = saveBody(original);
+    ((ObjectNode) nullEntry.path("content")).withArray("edu").addNull();
+    call("PUT", path, owner, nullEntry, 400);
+    JsonNode stored = call("GET", path, owner, null, 200);
+    assertThat(stored.path("version").asInt()).isZero();
+    assertThat(stored.path("content")).isEqualTo(original.path("content"));
+  }
+
+  @Test
+  void resumeListIsPaginatedAndContainsOnlySummaries() throws Exception {
+    Account owner = account();
+    Account other = account();
+    long firstId = resume(owner, freeTemplateId()).path("id").asLong();
+    long secondId = resume(owner, freeTemplateId()).path("id").asLong();
+    long thirdId = resume(owner, freeTemplateId()).path("id").asLong();
+    resume(other, freeTemplateId());
+
+    JsonNode firstPage = call("GET", "/api/resumes?page=1&size=2", owner, null, 200);
+    assertThat(firstPage.path("total").asLong()).isEqualTo(3);
+    assertThat(firstPage.path("page").asInt()).isEqualTo(1);
+    assertThat(firstPage.path("size").asInt()).isEqualTo(2);
+    assertThat(firstPage.path("records").size()).isEqualTo(2);
+    assertThat(firstPage.path("records").get(0).path("id").asLong()).isEqualTo(thirdId);
+    assertThat(firstPage.path("records").get(1).path("id").asLong()).isEqualTo(secondId);
+    JsonNode summary = firstPage.path("records").get(0);
+    assertThat(summary.path("basic").isObject()).isTrue();
+    assertThat(summary.path("basic").path("name").asText()).isNotBlank();
+    assertThat(summary.has("content")).isFalse();
+    assertThat(summary.has("userId")).isFalse();
+
+    JsonNode lastPage = call("GET", "/api/resumes?page=2&size=2", owner, null, 200);
+    assertThat(lastPage.path("records").size()).isEqualTo(1);
+    assertThat(lastPage.path("records").get(0).path("id").asLong()).isEqualTo(firstId);
+    assertThat(
+            call("GET", "/api/resumes?page=3&size=2", owner, null, 200).path("records").isEmpty())
+        .isTrue();
+    call("GET", "/api/resumes?page=0", owner, null, 400);
+    call("GET", "/api/resumes?size=101", owner, null, 400);
   }
 
   @Test

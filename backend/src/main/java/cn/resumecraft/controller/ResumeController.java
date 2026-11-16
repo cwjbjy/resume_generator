@@ -2,12 +2,15 @@ package cn.resumecraft.controller;
 
 import cn.resumecraft.common.ApiResponse;
 import cn.resumecraft.dto.CreateResumeRequest;
+import cn.resumecraft.dto.PageResponse;
+import cn.resumecraft.dto.ResumeResponse;
+import cn.resumecraft.dto.ResumeSummaryResponse;
 import cn.resumecraft.dto.SaveResumeRequest;
-import cn.resumecraft.entity.Resume;
 import cn.resumecraft.security.LoginUser;
 import cn.resumecraft.service.ResumeService;
 import jakarta.validation.Valid;
-import java.util.List;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -26,28 +30,34 @@ public class ResumeController {
   private final ResumeService resumeService;
 
   @PostMapping
-  ApiResponse<Resume> create(
+  ApiResponse<ResumeResponse> create(
       @AuthenticationPrincipal LoginUser loginUser,
       @Valid @RequestBody CreateResumeRequest request) {
-    return ApiResponse.ok(resumeService.create(loginUser.userId(), request.templateId()));
+    return ApiResponse.ok(
+        resumeService.response(resumeService.create(loginUser.userId(), request.templateId())));
   }
 
   @GetMapping
-  ApiResponse<List<Resume>> list(@AuthenticationPrincipal LoginUser loginUser) {
-    return ApiResponse.ok(resumeService.list(loginUser.userId()));
+  ApiResponse<PageResponse<ResumeSummaryResponse>> list(
+      @AuthenticationPrincipal LoginUser loginUser,
+      @RequestParam(defaultValue = "1") @Min(1) int page,
+      @RequestParam(defaultValue = "12") @Min(1) @Max(100) int size) {
+    return ApiResponse.ok(PageResponse.from(resumeService.list(loginUser.userId(), page, size)));
   }
 
   @GetMapping("/{id}")
-  ApiResponse<Resume> get(@AuthenticationPrincipal LoginUser loginUser, @PathVariable Long id) {
-    return ApiResponse.ok(resumeService.owned(loginUser.userId(), id));
+  ApiResponse<ResumeResponse> get(
+      @AuthenticationPrincipal LoginUser loginUser, @PathVariable Long id) {
+    return ApiResponse.ok(resumeService.response(resumeService.owned(loginUser.userId(), id)));
   }
 
   @PutMapping("/{id}")
-  ApiResponse<Resume> save(
+  ApiResponse<ResumeResponse> save(
       @AuthenticationPrincipal LoginUser loginUser,
       @PathVariable Long id,
       @Valid @RequestBody SaveResumeRequest request) {
-    return ApiResponse.ok(resumeService.save(loginUser.userId(), id, request));
+    return ApiResponse.ok(
+        resumeService.response(resumeService.save(loginUser.userId(), id, request)));
   }
 
   @DeleteMapping("/{id}")
@@ -57,8 +67,8 @@ public class ResumeController {
   }
 
   @PostMapping("/{id}/duplicate")
-  ApiResponse<Resume> duplicate(
+  ApiResponse<ResumeResponse> duplicate(
       @AuthenticationPrincipal LoginUser loginUser, @PathVariable Long id) {
-    return ApiResponse.ok(resumeService.duplicate(loginUser.userId(), id));
+    return ApiResponse.ok(resumeService.response(resumeService.duplicate(loginUser.userId(), id)));
   }
 }

@@ -60,8 +60,13 @@ class AuthFlowTest extends ApiTestSupport {
     assertThat(current.path("username").asText()).isEqualTo(u.username);
     assertThat(current.has("passwordHash")).isFalse();
     assertThat(current.has("password")).isFalse();
-    JsonNode expectedProfile = json.readTree(json.writeValueAsBytes(users.selectById(a.id())));
-    assertThat(current).isEqualTo(expectedProfile);
+    assertThat(current.size()).isEqualTo(8);
+    assertThat(current.path("nickname").asText()).isEqualTo(u.nickname);
+    assertThat(current.path("email").asText()).isEqualTo(u.email);
+    assertThat(current.path("avatarUrl").asText()).isEqualTo(u.avatarUrl);
+    assertThat(current.path("member").asBoolean()).isTrue();
+    assertThat(current.hasNonNull("memberExpireAt")).isTrue();
+    assertThat(current.hasNonNull("createdAt")).isTrue();
     call(
         "POST",
         "/api/auth/login",
@@ -102,6 +107,30 @@ class AuthFlowTest extends ApiTestSupport {
           .andExpect(status().isUnauthorized())
           .andExpect(jsonPath("$.code").value(401))
           .andExpect(jsonPath("$.message").value("用户名或密码错误"));
+    }
+  }
+
+  @Test
+  void standardRequestErrorsKeepTheirHttpStatus() throws Exception {
+    mvc.perform(post("/api/auth/login").contentType(MediaType.TEXT_PLAIN).content("invalid"))
+        .andExpect(status().isUnsupportedMediaType())
+        .andExpect(jsonPath("$.code").value(415));
+    mvc.perform(get("/api/auth/login"))
+        .andExpect(status().isMethodNotAllowed())
+        .andExpect(jsonPath("$.code").value(405));
+    mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON).content("{"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value(400));
+    mvc.perform(get("/api/plans").accept(MediaType.TEXT_PLAIN))
+        .andExpect(status().isNotAcceptable());
+
+    Account user = account();
+    for (String path : new String[] {"/api/resumes", "/api/orders", "/api/exports/logs"}) {
+      for (String query : new String[] {"?page=0", "?size=0", "?size=101", "?page=abc"}) {
+        mvc.perform(get(path + query).header("Authorization", "Bearer " + user.token()))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value(400));
+      }
     }
   }
 }

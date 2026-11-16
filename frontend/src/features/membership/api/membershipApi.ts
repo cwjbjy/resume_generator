@@ -1,23 +1,23 @@
 import { api } from '../../../lib/http';
-import type { Order, Plan } from '../../../types';
+import type { Order, PageResult, Plan } from '../../../types';
 
 export const membershipApi = {
   listPlans() {
     return api<Plan[]>('GET', '/plans');
   },
-  listOrders() {
-    return api<Order[]>('GET', '/orders');
+  listOrders(page = 1, size = 12) {
+    return api<PageResult<Order>>('GET', `/orders?page=${page}&size=${size}`);
   },
-  getOrder(id: string | number | undefined) {
-    return api<Order>('GET', `/orders/${id}`);
+  getOrder(id: string | number | undefined, token?: string) {
+    return api<Order>('GET', `/orders/${id}`, undefined, token);
   },
   createOrder(request: { planId: number; requestKey: string }) {
     return api<Order>('POST', '/orders', request);
   },
-  mockPayment(orderId: number, success: boolean) {
-    return api('POST', '/pay/mock', { orderId, success });
+  mockPayment(orderId: number, success: boolean, token?: string) {
+    return api<Order>('POST', '/pay/mock', { orderId, success }, token);
   },
   refundOrder(id: number) {
-    return api('POST', `/orders/${id}/refund`);
+    return api<Order>('POST', `/orders/${id}/refund`);
   },
 };

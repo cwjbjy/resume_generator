@@ -2,11 +2,13 @@ package cn.resumecraft.controller;
 
 import cn.resumecraft.common.ApiResponse;
 import cn.resumecraft.dto.CreateOrderRequest;
-import cn.resumecraft.entity.Order;
+import cn.resumecraft.dto.OrderResponse;
+import cn.resumecraft.dto.PageResponse;
 import cn.resumecraft.security.LoginUser;
 import cn.resumecraft.service.OrderService;
 import jakarta.validation.Valid;
-import java.util.List;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,20 +26,25 @@ public class OrderController {
   private final OrderService orderService;
 
   @PostMapping
-  ApiResponse<Order> create(
+  ApiResponse<OrderResponse> create(
       @AuthenticationPrincipal LoginUser loginUser,
       @Valid @RequestBody CreateOrderRequest request) {
     return ApiResponse.ok(
-        orderService.create(loginUser.userId(), request.planId(), request.requestKey()));
+        OrderResponse.from(
+            orderService.create(loginUser.userId(), request.planId(), request.requestKey())));
   }
 
   @GetMapping
-  ApiResponse<List<Order>> list(@AuthenticationPrincipal LoginUser loginUser) {
-    return ApiResponse.ok(orderService.list(loginUser.userId()));
+  ApiResponse<PageResponse<OrderResponse>> list(
+      @AuthenticationPrincipal LoginUser loginUser,
+      @RequestParam(defaultValue = "1") @Min(1) int page,
+      @RequestParam(defaultValue = "12") @Min(1) @Max(100) int size) {
+    return ApiResponse.ok(orderService.list(loginUser.userId(), page, size));
   }
 
   @GetMapping("/{id}")
-  ApiResponse<Order> detail(@AuthenticationPrincipal LoginUser loginUser, @PathVariable Long id) {
-    return ApiResponse.ok(orderService.detail(loginUser.userId(), id));
+  ApiResponse<OrderResponse> detail(
+      @AuthenticationPrincipal LoginUser loginUser, @PathVariable Long id) {
+    return ApiResponse.ok(OrderResponse.from(orderService.detail(loginUser.userId(), id)));
   }
 }

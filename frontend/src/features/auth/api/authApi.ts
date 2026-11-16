@@ -1,14 +1,17 @@
 import { api } from '../../../lib/http';
-import { userApi } from '../../user/api/userApi';
+
+export interface AuthenticationResult {
+  token: string;
+  id: number;
+  username: string;
+}
 
 export const authApi = {
-  async authenticate(credentials: Record<string, FormDataEntryValue>, register: boolean) {
-    const result = await api<{ token: string; id: number; username: string }>(
+  authenticate(credentials: Record<string, FormDataEntryValue>, register: boolean) {
+    return api<AuthenticationResult>(
       'POST',
       register ? '/auth/register' : '/auth/login',
       credentials,
     );
-    const user = await userApi.current(result.token);
-    return { ...result, user };
   },
 };

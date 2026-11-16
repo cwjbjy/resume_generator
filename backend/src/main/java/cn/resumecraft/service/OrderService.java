@@ -2,6 +2,8 @@ package cn.resumecraft.service;
 
 import static cn.resumecraft.exception.BizException.require;
 
+import cn.resumecraft.dto.OrderResponse;
+import cn.resumecraft.dto.PageResponse;
 import cn.resumecraft.entity.Order;
 import cn.resumecraft.entity.Plan;
 import cn.resumecraft.mapper.OrderMapper;
@@ -9,6 +11,7 @@ import cn.resumecraft.mapper.PlanMapper;
 import cn.resumecraft.mapper.UserMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -30,11 +33,14 @@ public class OrderService {
     return planMapper.selectList(new LambdaQueryWrapper<Plan>().orderByAsc(Plan::getSort));
   }
 
-  public List<Order> list(Long userId) {
-    return orderMapper.selectList(
-        new LambdaQueryWrapper<Order>()
-            .eq(Order::getUserId, userId)
-            .orderByDesc(Order::getCreatedAt));
+  public PageResponse<OrderResponse> list(Long userId, int page, int size) {
+    var result =
+        orderMapper.selectPage(
+            new Page<>(page, size),
+            new LambdaQueryWrapper<Order>()
+                .eq(Order::getUserId, userId)
+                .orderByDesc(Order::getCreatedAt, Order::getId));
+    return PageResponse.from(result.convert(OrderResponse::from));
   }
 
   public Order owned(Long userId, Long orderId) {
@@ -46,8 +52,15 @@ public class OrderService {
 
   public Order detail(Long userId, Long orderId) {
     Order order = owned(userId, orderId);
-    if (order.status.equals("CREATED") && order.expiredAt.isBefore(LocalDateTime.now())) {
-      expire();
+    LocalDateTime now = LocalDateTime.now();
+    if (order.status.equals("CREATED") && !order.expiredAt.isAfter(now)) {
+      orderMapper.update(
+          null,
+          new LambdaUpdateWrapper<Order>()
+              .eq(Order::getId, orderId)
+              .eq(Order::getStatus, "CREATED")
+              .le(Order::getExpiredAt, now)
+              .set(Order::getStatus, "EXPIRED"));
       return owned(userId, orderId);
     }
     return order;
@@ -62,6 +75,7 @@ public class OrderService {
                 .eq(Order::getUserId, userId)
                 .eq(Order::getRequestKey, requestKey));
     if (existing != null) {
+      require(existing.planId.equals(planId), 409, "幂等请求参数不一致");
       return existing;
     }
     Plan plan = planMapper.selectById(planId);
@@ -72,6 +86,8 @@ public class OrderService {
     order.orderNo = "RC" + date + suffix;
     order.userId = userId;
     order.planId = planId;
+    order.planName = plan.name;
+    order.durationDays = plan.durationDays;
     order.amount = plan.price;
     order.status = "CREATED";
     order.channel = "MOCK";

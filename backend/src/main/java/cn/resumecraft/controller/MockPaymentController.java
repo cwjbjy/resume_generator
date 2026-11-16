@@ -2,6 +2,7 @@ package cn.resumecraft.controller;
 
 import cn.resumecraft.common.ApiResponse;
 import cn.resumecraft.dto.MockPaymentRequest;
+import cn.resumecraft.dto.OrderResponse;
 import cn.resumecraft.dto.PaymentCallback;
 import cn.resumecraft.entity.Order;
 import cn.resumecraft.security.LoginUser;
@@ -29,7 +30,7 @@ public class MockPaymentController {
   private final PaymentSignatureService signatureService;
 
   @PostMapping("/pay/mock")
-  ApiResponse<Order> mock(
+  ApiResponse<OrderResponse> mock(
       @AuthenticationPrincipal LoginUser loginUser,
       @Valid @RequestBody MockPaymentRequest request) {
     Long userId = loginUser.userId();
@@ -42,11 +43,12 @@ public class MockPaymentController {
             request.success() ? "SUCCESS" : "FAILED",
             Instant.now().getEpochSecond());
     paymentService.callback(callback, signatureService.sign(callback));
-    return ApiResponse.ok(orderService.owned(userId, order.id));
+    return ApiResponse.ok(OrderResponse.from(orderService.owned(userId, order.id)));
   }
 
   @PostMapping("/orders/{id}/refund")
-  ApiResponse<Order> refund(@AuthenticationPrincipal LoginUser loginUser, @PathVariable Long id) {
-    return ApiResponse.ok(paymentService.refund(loginUser.userId(), id));
+  ApiResponse<OrderResponse> refund(
+      @AuthenticationPrincipal LoginUser loginUser, @PathVariable Long id) {
+    return ApiResponse.ok(OrderResponse.from(paymentService.refund(loginUser.userId(), id)));
   }
 }

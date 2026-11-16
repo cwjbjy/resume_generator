@@ -3,7 +3,7 @@ package cn.resumecraft.controller;
 import cn.resumecraft.common.ApiResponse;
 import cn.resumecraft.dto.MembershipResponse;
 import cn.resumecraft.dto.UpdateProfileRequest;
-import cn.resumecraft.entity.User;
+import cn.resumecraft.dto.UserProfileResponse;
 import cn.resumecraft.security.LoginUser;
 import cn.resumecraft.service.UserService;
 import jakarta.validation.Valid;
@@ -22,15 +22,16 @@ public class UserController {
   private final UserService userService;
 
   @GetMapping("/users/me")
-  ApiResponse<User> current(@AuthenticationPrincipal LoginUser loginUser) {
-    return ApiResponse.ok(userService.current(loginUser.userId()));
+  ApiResponse<UserProfileResponse> current(@AuthenticationPrincipal LoginUser loginUser) {
+    return ApiResponse.ok(UserProfileResponse.from(userService.current(loginUser.userId())));
   }
 
   @PutMapping("/users/me")
-  ApiResponse<User> update(
+  ApiResponse<UserProfileResponse> update(
       @AuthenticationPrincipal LoginUser loginUser,
       @Valid @RequestBody UpdateProfileRequest request) {
-    return ApiResponse.ok(userService.updateProfile(loginUser.userId(), request));
+    return ApiResponse.ok(
+        UserProfileResponse.from(userService.updateProfile(loginUser.userId(), request)));
   }
 
   @GetMapping("/membership")

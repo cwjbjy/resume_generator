@@ -1,7 +1,7 @@
 package cn.resumecraft.controller;
 
 import cn.resumecraft.common.ApiResponse;
-import cn.resumecraft.entity.Template;
+import cn.resumecraft.dto.TemplateResponse;
 import cn.resumecraft.service.TemplateService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -18,12 +18,13 @@ public class TemplateController {
   private final TemplateService templateService;
 
   @GetMapping
-  ApiResponse<List<Template>> list(@RequestParam(defaultValue = "all") String filter) {
-    return ApiResponse.ok(templateService.list(filter));
+  ApiResponse<List<TemplateResponse>> list(@RequestParam(defaultValue = "all") String filter) {
+    return ApiResponse.ok(
+        templateService.list(filter).stream().map(TemplateResponse::from).toList());
   }
 
   @GetMapping("/{id}")
-  ApiResponse<Template> get(@PathVariable Long id) {
-    return ApiResponse.ok(templateService.get(id));
+  ApiResponse<TemplateResponse> get(@PathVariable Long id) {
+    return ApiResponse.ok(TemplateResponse.from(templateService.get(id)));
   }
 }

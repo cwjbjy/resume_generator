@@ -1,9 +1,9 @@
 import { api } from '../../../lib/http';
-import type { ExportLog } from '../../../types';
+import type { ExportLog, PageResult } from '../../../types';
 
 export const exportApi = {
-  list() {
-    return api<ExportLog[]>('GET', '/exports/logs');
+  list(page = 1, size = 12) {
+    return api<PageResult<ExportLog>>('GET', `/exports/logs?page=${page}&size=${size}`);
   },
   reserve(resumeId: number) {
     return api<{ id: number }>('POST', '/exports', { resumeId });

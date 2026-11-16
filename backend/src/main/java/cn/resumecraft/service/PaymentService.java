@@ -6,7 +6,6 @@ import cn.resumecraft.dto.PaymentCallback;
 import cn.resumecraft.entity.Order;
 import cn.resumecraft.entity.User;
 import cn.resumecraft.mapper.OrderMapper;
-import cn.resumecraft.mapper.PlanMapper;
 import cn.resumecraft.mapper.UserMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -21,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PaymentService {
   private final OrderMapper orderMapper;
-  private final PlanMapper planMapper;
   private final UserMapper userMapper;
   private final OrderService orderService;
   private final PaymentSignatureService signatureService;
@@ -56,7 +54,7 @@ public class PaymentService {
       return "success";
     }
     markPaid(order, callback.transactionId());
-    extendMembership(user, planMapper.selectById(order.planId).durationDays);
+    extendMembership(user, order.durationDays);
     paymentLogService.record(order, callback, "SUCCESS");
     return "success";
   }
@@ -73,7 +71,7 @@ public class PaymentService {
             .eq(Order::getId, orderId)
             .eq(Order::getStatus, "PAID")
             .set(Order::getStatus, "REFUNDED"));
-    int days = planMapper.selectById(order.planId).durationDays;
+    int days = order.durationDays;
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime expiry = user.memberExpireAt == null ? now : user.memberExpireAt.minusDays(days);
     if (expiry.isBefore(now)) {
