@@ -130,6 +130,19 @@ curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8088   # 预期 200
 
 当前为演示阶段，`init-env.sh` 生成 `APP_PROFILE=dev`；正式运营时改为 `prod`，重启 backend 即可关闭模拟支付、退款演示与默认账号。
 
+推送 git tag 后 CI 会自动构建推送镜像并通过 SSH 部署到服务器（见 `.github/workflows/ci.yml` 的 deploy job）。服务器只需一次性准备：
+
+```bash
+# 服务器：首次准备（clone 仓库 + 生成 .env + 授权 CI 的部署密钥）
+cd /opt && git clone <仓库地址> resume-craft && cd resume-craft
+sh init-env.sh
+ssh-keygen -t ed25519 -f ~/.ssh/deploy_ci -N ''        # 生成专用部署密钥对
+cat ~/.ssh/deploy_ci.pub >> ~/.ssh/authorized_keys      # 公钥授权
+cat ~/.ssh/deploy_ci                                    # 私钥存入 GitHub Secrets 的 DEPLOY_SSH_KEY
+```
+
+此后每次发版只需：`git tag <新版本号>`、同步 `compose.prod.yml` 镜像 tag、`git push`，CI 自动完成构建、推 ACR、SSH 登录服务器执行 `git pull + docker compose up -d`（自动拉新镜像并重建容器，数据卷不受影响）。需要提前在 GitHub Secrets 配置 `ACR_USERNAME` / `ACR_PASSWORD`（ACR 推送凭据）与 `DEPLOY_HOST` / `DEPLOY_USER` / `DEPLOY_SSH_KEY`（服务器 SSH 信息）。
+
 ## 三、已实现功能
 
 | 模块     | 功能                                                                                                                                          |

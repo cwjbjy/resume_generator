@@ -60,3 +60,22 @@ jobs:
           tags: registry.cn-hangzhou.aliyuncs.com/node_caowj/frontend:${{ github.ref_name }}
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
+  deploy:
+    needs: build-and-push
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      # 服务器前置准备：git clone 仓库到 /opt/resume-craft、sh init-env.sh、
+      # 将部署专用 SSH 公钥加入 authorized_keys；GitHub Secrets 需配
+      # DEPLOY_HOST（服务器公网IP）、DEPLOY_USER、DEPLOY_SSH_KEY。
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /opt/resume-craft
+            git fetch origin
+            git reset --hard origin/main
+            docker compose -f compose.prod.yml up -d --wait
+            docker compose -f compose.prod.yml ps
