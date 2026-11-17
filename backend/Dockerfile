@@ -11,4 +11,4 @@ COPY --from=build /app/target/resume-craft-1.0.0.jar app.jar
 USER app
 ENV TZ=Asia/Shanghai
 EXPOSE 8080
-ENTRYPOINT ["java", "-Duser.timezone=Asia/Shanghai", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Duser.timezone=Asia/Shanghai -jar app.jar"]

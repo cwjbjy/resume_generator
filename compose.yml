@@ -4,13 +4,26 @@ services:
     environment:
       MYSQL_DATABASE: resumecraft
       MYSQL_USER: resumecraft
-      MYSQL_PASSWORD: ${DB_PASSWORD:?Run init-env.ps1 first}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Run init-env.ps1 first}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Run init-env.sh first}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Run init-env.sh first}
       TZ: Asia/Shanghai
-    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    command:
+      [
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_unicode_ci",
+        "--performance-schema=OFF",
+        "--innodb-buffer-pool-size=64M",
+      ]
+    mem_limit: 768m
     volumes: ["mysql-data:/var/lib/mysql"]
+    # 本机 Java/Vite 进程通过环回端口直连，仅限本机访问
+    ports: ["127.0.0.1:${DB_PORT:-3306}:3306"]
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent",
+        ]
       interval: 10s
       timeout: 5s
       retries: 15
@@ -18,11 +31,21 @@ services:
   redis:
     image: redis:7-alpine
     environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD:?Run init-env.ps1 first}
-    command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""]
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Run init-env.sh first}
+    command:
+      [
+        "sh",
+        "-c",
+        'exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"',
+      ]
     volumes: ["redis-data:/data"]
+    ports: ["127.0.0.1:${REDIS_PORT:-6379}:6379"]
     healthcheck:
-      test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping | grep PONG"]
+      test:
+        [
+          "CMD-SHELL",
+          "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping | grep PONG",
+        ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -37,8 +60,9 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
       MANAGEMENT_HEALTH_REDIS_ENABLED: "true"
-      JWT_SECRET: ${JWT_SECRET:?Run init-env.ps1 first}
-      PAYMENT_SECRET: ${PAYMENT_SECRET:?Run init-env.ps1 first}
+      JWT_SECRET: ${JWT_SECRET:?Run init-env.sh first}
+      PAYMENT_SECRET: ${PAYMENT_SECRET:?Run init-env.sh first}
+      JAVA_OPTS: "-Xmx256m"
       TZ: Asia/Shanghai
     depends_on:
       mysql: { condition: service_healthy }

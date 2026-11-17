@@ -1,0 +1,81 @@
+services:
+  mysql:
+    image: registry.cn-hangzhou.aliyuncs.com/node_caowj/mysql
+    environment:
+      MYSQL_DATABASE: resumecraft
+      MYSQL_USER: resumecraft
+      MYSQL_PASSWORD: ${DB_PASSWORD:?create .env first}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?create .env first}
+      TZ: Asia/Shanghai
+    command:
+      [
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_unicode_ci",
+        "--performance-schema=OFF",
+        "--innodb-buffer-pool-size=64M",
+      ]
+    mem_limit: 768m
+    volumes: ["mysql-data:/var/lib/mysql"]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    restart: unless-stopped
+  redis:
+    image: registry.cn-hangzhou.aliyuncs.com/node_caowj/redis
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?create .env first}
+    command:
+      [
+        "sh",
+        "-c",
+        'exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"',
+      ]
+    volumes: ["redis-data:/data"]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping | grep PONG",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+  backend:
+    image: registry.cn-hangzhou.aliyuncs.com/node_caowj/backend:1.0.0
+    environment:
+      SPRING_PROFILES_ACTIVE: ${APP_PROFILE:-dev}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/resumecraft?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: resumecraft
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      MANAGEMENT_HEALTH_REDIS_ENABLED: "true"
+      JWT_SECRET: ${JWT_SECRET:?create .env first}
+      PAYMENT_SECRET: ${PAYMENT_SECRET:?create .env first}
+      JAVA_OPTS: "-Xmx256m"
+      TZ: Asia/Shanghai
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    restart: unless-stopped
+  frontend:
+    image: registry.cn-hangzhou.aliyuncs.com/node_caowj/frontend:1.0.0
+    ports: ["127.0.0.1:8088:80"]
+    depends_on: [backend]
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    restart: unless-stopped
+volumes:
+  mysql-data:
+  redis-data:

@@ -1,9 +1,0 @@
-# Local Java/Vite processes connect to these loopback-only ports.
-# docker compose -f compose.yml -f compose.dev.yml up -d --wait mysql redis
-services:
-  mysql:
-    ports:
-      - "127.0.0.1:${DB_PORT:-3306}:3306"
-  redis:
-    ports:
-      - "127.0.0.1:${REDIS_PORT:-6379}:6379"

@@ -6,22 +6,23 @@
 
 ### 前置条件
 
-| 依赖           | 版本        |
-| -------------- | ----------- |
-| Docker Desktop | Linux 容器  |
-| JDK            | 21          |
-| Node.js        | 20.19+ / 22 |
+| 依赖            | 版本                                            |
+| --------------- | ----------------------------------------------- |
+| Docker Desktop  | Linux 容器                                      |
+| JDK             | 21                                              |
+| Node.js         | 20.19+ / 22                                     |
+| Git（Git Bash） | 2.x（Windows 上用 Git Bash 执行 `init-env.sh`） |
 
 ### 1. 启动依赖容器
 
-```powershell
-cd D:\cwj\resume_generator
-.\init-env.ps1
-docker compose -f compose.yml -f compose.dev.yml up -d --wait mysql redis
+```bash
+cd /d/cwj/resume_generator   # Windows 在 Git Bash 中执行；服务器用实际路径
+sh init-env.sh
+docker compose up -d --wait mysql redis
 ```
 
-- `init-env.ps1` 仅在根目录 `.env` 不存在时生成随机密钥；`.env` 已存在时跳过。
-- `compose.dev.yml` 把 MySQL、Redis 映射到 `127.0.0.1:3306`、`127.0.0.1:6379`。端口冲突时在 `.env` 中改 `DB_PORT` / `REDIS_PORT`，再重跑该命令。
+- `init-env.sh` 仅在根目录 `.env` 不存在时生成随机密钥；`.env` 已存在时跳过。Windows 需在 Git Bash（自带 openssl）中执行，服务器直接执行。
+- MySQL、Redis 映射到 `127.0.0.1:3306`、`127.0.0.1:6379`，供本机 Java/Vite 进程连接。端口冲突时在 `.env` 中改 `DB_PORT` / `REDIS_PORT`，再重跑该命令。
 - MySQL 首次启动由 Flyway 自动执行迁移；数据保存在命名卷 `mysql-data`，重建容器不丢失。
 
 ### 2. 启动后端
@@ -56,36 +57,78 @@ npm run dev
 ### 停止
 
 ```powershell
-docker compose -f compose.yml -f compose.dev.yml stop mysql redis
+docker compose stop mysql redis
 ```
 
 `stop` 只停进程，容器与数据卷保留，下次启动沿用原有数据。
 
-## 二、打包部署启动
+## 二、打包部署
+
+### 1. 本地测试部署（--build 现场构建）
 
 前端 Nginx、后端、MySQL、Redis 全部运行在容器中，Java 构建与运行均使用容器内 JDK 21。
 
-```powershell
-cd D:\cwj\resume_generator
-.\init-env.ps1
+```bash
+cd /d/cwj/resume_generator   # Windows 在 Git Bash 中执行；服务器用实际路径
+sh init-env.sh
 docker compose up --build -d
 ```
 
-访问 <http://127.0.0.1:8088>。
+访问 <http://127.0.0.1:8088>。停止：
 
-| 项            | 说明                                                                         |
-| ------------- | ---------------------------------------------------------------------------- |
-| 编排文件      | 仅 `compose.yml`；`compose.dev.yml` 只用于本地开发的端口映射                 |
-| 启动服务      | `mysql`、`redis`、`backend`、`frontend` 四个                                 |
-| 网络          | MySQL、Redis 通过 Docker 内网连接，不映射到宿主机                            |
-| `APP_PROFILE` | 默认 `dev`（可演示模拟支付）；改为 `prod` 后关闭模拟支付、退款演示与默认账号 |
-| 数据卷        | 与本地开发共用 `mysql-data`、`redis-data`                                    |
+```powershell
+docker compose stop
+```
 
-注意事项：
+### 2. 构建并推送镜像（阿里云 ACR）
 
-- 两种模式共用同一组容器名与数据卷，**不能同时运行**；切换前先 `stop` 或 `down`。
-- `--build` 只重建 `backend`、`frontend` 镜像，MySQL、Redis 使用官方镜像。
-- 正式上线还需域名、HTTPS、数据库备份、真实支付渠道接入与网关配置；`compose` 当前只绑定本机地址。
+服务器不做现场构建，镜像推送 ACR，服务器只拉取运行，避开小内存机器上的 Maven/npm 构建峰值。
+
+**推荐方式：推送 git tag 由 CI 自动构建推送**（见 `.github/workflows/ci.yml`）。每次发版把版本号 +0.0.1 作为 tag 推到 GitHub，CI 自动构建并推送 `backend:<tag>`、`frontend:<tag>` 到 ACR；MySQL/Redis 已在服务器，不参与。前置：GitHub Secrets 中配置 `ACR_USERNAME`、`ACR_PASSWORD`（ACR 访问凭证的固定密码）。
+
+```powershell
+git tag 1.0.1
+git push origin 1.0.1
+```
+
+**备选方式：本地手动构建推送**
+
+```powershell
+docker login --username=<阿里云账号> registry.cn-hangzhou.aliyuncs.com
+
+# backend / frontend：本地构建。
+# --provenance=false --sbom=false 必须携带：Docker Desktop 开启 containerd 镜像存储时，
+# 默认附带的 attestation 空层（oci.empty.v1）会被 ACR 拒收：unknown manifest class
+docker buildx build --provenance=false --sbom=false -t registry.cn-hangzhou.aliyuncs.com/node_caowj/backend:1.0.1 --load ./backend
+docker buildx build --provenance=false --sbom=false -t registry.cn-hangzhou.aliyuncs.com/node_caowj/frontend:1.0.1 --load ./frontend
+docker push registry.cn-hangzhou.aliyuncs.com/node_caowj/backend:1.0.1
+docker push registry.cn-hangzhou.aliyuncs.com/node_caowj/frontend:1.0.1
+
+# mysql / redis：官方镜像转推一份，服务器统一从 ACR 拉取（仅首次或官方镜像更新时）
+docker tag mysql:8.0 registry.cn-hangzhou.aliyuncs.com/node_caowj/mysql:8.0
+docker tag redis:7-alpine registry.cn-hangzhou.aliyuncs.com/node_caowj/redis:7-alpine
+docker push registry.cn-hangzhou.aliyuncs.com/node_caowj/mysql:8.0
+docker push registry.cn-hangzhou.aliyuncs.com/node_caowj/redis:7-alpine
+```
+
+发版时更新镜像 tag（如 `1.0.1`）并同步修改 `compose.prod.yml` 中的镜像引用，旧 tag 保留在 ACR 便于回滚。
+
+### 3. 云服务器部署（拉取镜像运行）
+
+服务器只需两个文件：仓库根目录的 `compose.prod.yml` 和 `init-env.sh`（密钥在服务器独立生成，勿直接上传本地 `.env`）。
+
+```bash
+mkdir -p /opt/resume-craft && cd /opt/resume-craft
+# 上传 compose.prod.yml 和 init-env.sh 后，生成生产 .env（仅首次执行；.env 已存在则拒绝覆盖）
+sh init-env.sh
+
+docker login --username=<阿里云账号> registry.cn-hangzhou.aliyuncs.com
+docker compose -f compose.prod.yml up -d --wait
+docker compose -f compose.prod.yml ps
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8088   # 预期 200
+```
+
+当前为演示阶段，`init-env.sh` 生成 `APP_PROFILE=dev`；正式运营时改为 `prod`，重启 backend 即可关闭模拟支付、退款演示与默认账号。
 
 ## 三、已实现功能
 
