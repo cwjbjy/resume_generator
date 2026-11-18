@@ -91,46 +91,9 @@ git tag 1.0.1
 git push origin 1.0.1
 ```
 
-**备选方式：本地手动构建推送**
-
-```powershell
-docker login --username=<阿里云账号> registry.cn-hangzhou.aliyuncs.com
-
-# backend / frontend：本地构建。
-# --provenance=false --sbom=false 必须携带：Docker Desktop 开启 containerd 镜像存储时，
-# 默认附带的 attestation 空层（oci.empty.v1）会被 ACR 拒收：unknown manifest class
-docker buildx build --provenance=false --sbom=false -t registry.cn-hangzhou.aliyuncs.com/node_caowj/backend:1.0.1 --load ./backend
-docker buildx build --provenance=false --sbom=false -t registry.cn-hangzhou.aliyuncs.com/node_caowj/frontend:1.0.1 --load ./frontend
-docker push registry.cn-hangzhou.aliyuncs.com/node_caowj/backend:1.0.1
-docker push registry.cn-hangzhou.aliyuncs.com/node_caowj/frontend:1.0.1
-
-# mysql / redis：官方镜像转推一份，服务器统一从 ACR 拉取（仅首次或官方镜像更新时）
-docker tag mysql:8.0 registry.cn-hangzhou.aliyuncs.com/node_caowj/mysql:8.0
-docker tag redis:7-alpine registry.cn-hangzhou.aliyuncs.com/node_caowj/redis:7-alpine
-docker push registry.cn-hangzhou.aliyuncs.com/node_caowj/mysql:8.0
-docker push registry.cn-hangzhou.aliyuncs.com/node_caowj/redis:7-alpine
-```
-
-发版时更新镜像 tag（如 `1.0.1`）并同步修改 `compose.prod.yml` 中的镜像引用，旧 tag 保留在 ACR 便于回滚。
-
 ### 3. 云服务器部署（拉取镜像运行）
 
-服务器只需两个文件：仓库根目录的 `compose.prod.yml` 和 `init-env.sh`（密钥在服务器独立生成，勿直接上传本地 `.env`）。
-
-```bash
-mkdir -p /opt/resume-craft && cd /opt/resume-craft
-# 上传 compose.prod.yml 和 init-env.sh 后，生成生产 .env（仅首次执行；.env 已存在则拒绝覆盖）
-sh init-env.sh
-
-docker login --username=<阿里云账号> registry.cn-hangzhou.aliyuncs.com
-docker compose -f compose.prod.yml up -d --wait
-docker compose -f compose.prod.yml ps
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8088   # 预期 200
-```
-
-当前为演示阶段，`init-env.sh` 生成 `APP_PROFILE=dev`；正式运营时改为 `prod`，重启 backend 即可关闭模拟支付、退款演示与默认账号。
-
-推送 git tag 后 CI 会自动构建推送镜像并通过 SSH 部署到服务器（见 `.github/workflows/ci.yml` 的 deploy job）。服务器只需一次性准备：
+服务器从 GitHub clone 仓库，镜像由 CI 构建推送后自动部署（见 `.github/workflows/ci.yml` 的 deploy job）。服务器只需一次性准备：
 
 ```bash
 # 服务器：首次准备（clone 仓库 + 生成 .env + 授权 CI 的部署密钥）
@@ -141,7 +104,16 @@ cat ~/.ssh/deploy_ci.pub >> ~/.ssh/authorized_keys      # 公钥授权
 cat ~/.ssh/deploy_ci                                    # 私钥存入 GitHub Secrets 的 DEPLOY_SSH_KEY
 ```
 
-此后每次发版只需：`git tag <新版本号>`、同步 `compose.prod.yml` 镜像 tag、`git push`，CI 自动完成构建、推 ACR、SSH 登录服务器执行 `git pull + docker compose up -d`（自动拉新镜像并重建容器，数据卷不受影响）。需要提前在 GitHub Secrets 配置 `ACR_USERNAME` / `ACR_PASSWORD`（ACR 推送凭据）与 `DEPLOY_HOST` / `DEPLOY_USER` / `DEPLOY_SSH_KEY`（服务器 SSH 信息）。
+当前为演示阶段，`init-env.sh` 生成 `APP_PROFILE=dev`；正式运营时改为 `prod`，重启 backend 即可关闭模拟支付、退款演示与默认账号。
+
+此后每次发版只需推送 git tag：
+
+```powershell
+git tag 1.0.1
+git push origin 1.0.1
+```
+
+CI 自动完成：构建推镜像到 ACR → SSH 登录服务器执行 `git fetch/reset + docker compose up -d --wait`（自动拉新镜像并重建容器，数据卷不受影响），`compose.prod.yml` 无需任何修改。GitHub Secrets 需配置 `ACR_USERNAME` / `ACR_PASSWORD`（ACR 推送凭据）与 `DEPLOY_HOST` / `DEPLOY_USER` / `DEPLOY_SSH_KEY`（服务器 SSH 信息）。
 
 ## 三、已实现功能
 

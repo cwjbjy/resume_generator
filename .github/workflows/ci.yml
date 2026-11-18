@@ -68,14 +68,18 @@ jobs:
       # 服务器前置准备：git clone 仓库到 /opt/resume-craft、sh init-env.sh、
       # 将部署专用 SSH 公钥加入 authorized_keys；GitHub Secrets 需配
       # DEPLOY_HOST（服务器公网IP）、DEPLOY_USER、DEPLOY_SSH_KEY。
+      # IMAGE_TAG 取自 git tag（如 1.0.1），服务器 compose.prod.yml 无需手动改版本号。
       - uses: appleboy/ssh-action@v1
+        env:
+          IMAGE_TAG: ${{ github.ref_name }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: IMAGE_TAG
           script: |
             cd /opt/resume-craft
             git fetch origin
             git reset --hard origin/main
-            docker compose -f compose.prod.yml up -d --wait
+            IMAGE_TAG="$IMAGE_TAG" docker compose -f compose.prod.yml up -d --wait
             docker compose -f compose.prod.yml ps

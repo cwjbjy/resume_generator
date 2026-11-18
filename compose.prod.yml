@@ -48,7 +48,7 @@ services:
       retries: 10
     restart: unless-stopped
   backend:
-    image: registry.cn-hangzhou.aliyuncs.com/node_caowj/backend:1.0.0
+    image: registry.cn-hangzhou.aliyuncs.com/node_caowj/backend:${IMAGE_TAG:-1.0.0}
     environment:
       SPRING_PROFILES_ACTIVE: ${APP_PROFILE:-dev}
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/resumecraft?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
@@ -69,7 +69,7 @@ services:
       options: { max-size: "10m", max-file: "3" }
     restart: unless-stopped
   frontend:
-    image: registry.cn-hangzhou.aliyuncs.com/node_caowj/frontend:1.0.0
+    image: registry.cn-hangzhou.aliyuncs.com/node_caowj/frontend:${IMAGE_TAG:-1.0.0}
     ports: ["127.0.0.1:8088:80"]
     depends_on: [backend]
     logging:
