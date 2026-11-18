@@ -21,10 +21,6 @@ sh init-env.sh
 docker compose up -d --wait mysql redis
 ```
 
-- `init-env.sh` 仅在根目录 `.env` 不存在时生成随机密钥；`.env` 已存在时跳过。Windows 需在 Git Bash（自带 openssl）中执行，服务器直接执行。
-- MySQL、Redis 映射到 `127.0.0.1:3306`、`127.0.0.1:6379`，供本机 Java/Vite 进程连接。端口冲突时在 `.env` 中改 `DB_PORT` / `REDIS_PORT`，再重跑该命令。
-- MySQL 首次启动由 Flyway 自动执行迁移；数据保存在命名卷 `mysql-data`，重建容器不丢失。
-
 ### 2. 启动后端
 
 ```powershell
@@ -62,9 +58,7 @@ docker compose stop mysql redis
 
 `stop` 只停进程，容器与数据卷保留，下次启动沿用原有数据。
 
-## 二、打包部署
-
-### 1. 本地测试部署（--build 现场构建）
+## 二、本地测试部署
 
 前端 Nginx、后端、MySQL、Redis 全部运行在容器中，Java 构建与运行均使用容器内 JDK 21。
 
@@ -79,44 +73,6 @@ docker compose up --build -d
 ```powershell
 docker compose stop
 ```
-
-### 2. 构建并推送镜像（阿里云 ACR）
-
-服务器不做现场构建，镜像推送 ACR，服务器只拉取运行，避开小内存机器上的 Maven/npm 构建峰值。
-
-**推荐方式：推送 git tag 由 CI 自动构建推送**（见 `.github/workflows/ci.yml`）。每次发版把版本号 +0.0.1 作为 tag 推到 GitHub，CI 自动构建并推送 `backend:<tag>`、`frontend:<tag>` 到 ACR；MySQL/Redis 已在服务器，不参与。前置：GitHub Secrets 中配置 `ACR_USERNAME`、`ACR_PASSWORD`（ACR 访问凭证的固定密码）。
-
-```powershell
-git tag 1.0.1
-git push origin 1.0.1
-```
-
-### 3. 云服务器部署（拉取镜像运行）
-
-服务器不需要 git，只需上传部署文件；镜像由 CI 构建推送后自动部署（见 `.github/workflows/ci.yml` 的 deploy job）。首次准备：
-
-```bash
-# 本地 Windows：上传部署文件到服务器
-scp compose.prod.yml init-env.sh root@<服务器IP>:/opt/resume-craft/
-
-# 服务器：生成 .env + 授权 CI 的部署密钥
-cd /opt/resume-craft
-sh init-env.sh
-ssh-keygen -t ed25519 -f ~/.ssh/deploy_ci -N ''        # 生成专用部署密钥对
-cat ~/.ssh/deploy_ci.pub >> ~/.ssh/authorized_keys      # 公钥授权
-cat ~/.ssh/deploy_ci                                    # 私钥存入 GitHub Secrets 的 DEPLOY_SSH_KEY
-```
-
-当前为演示阶段，`init-env.sh` 生成 `APP_PROFILE=dev`；正式运营时改为 `prod`，重启 backend 即可关闭模拟支付、退款演示与默认账号。
-
-此后每次发版只需推送 git tag：
-
-```powershell
-git tag 1.0.1
-git push origin 1.0.1
-```
-
-CI 自动完成：构建推镜像到 ACR → SSH 登录服务器执行 `docker compose up -d --wait`（自动拉新镜像并重建容器，数据卷不受影响），`compose.prod.yml` 无需任何修改也是因为版本号由 git tag 注入。后续若修改了 `compose.prod.yml`，手动 scp 重新上传一次即可（服务器不依赖 GitHub 网络）。GitHub Secrets 需配置 `ACR_USERNAME` / `ACR_PASSWORD`（ACR 推送凭据）与 `DEPLOY_HOST` / `DEPLOY_USER` / `DEPLOY_SSH_KEY`（服务器 SSH 信息）。
 
 ## 三、已实现功能
 
