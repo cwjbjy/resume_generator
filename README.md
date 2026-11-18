@@ -93,11 +93,14 @@ git push origin 1.0.1
 
 ### 3. 云服务器部署（拉取镜像运行）
 
-服务器从 GitHub clone 仓库，镜像由 CI 构建推送后自动部署（见 `.github/workflows/ci.yml` 的 deploy job）。服务器只需一次性准备：
+服务器不需要 git，只需上传部署文件；镜像由 CI 构建推送后自动部署（见 `.github/workflows/ci.yml` 的 deploy job）。首次准备：
 
 ```bash
-# 服务器：首次准备（clone 仓库 + 生成 .env + 授权 CI 的部署密钥）
-cd /opt && git clone <仓库地址> resume-craft && cd resume-craft
+# 本地 Windows：上传部署文件到服务器
+scp compose.prod.yml init-env.sh root@<服务器IP>:/opt/resume-craft/
+
+# 服务器：生成 .env + 授权 CI 的部署密钥
+cd /opt/resume-craft
 sh init-env.sh
 ssh-keygen -t ed25519 -f ~/.ssh/deploy_ci -N ''        # 生成专用部署密钥对
 cat ~/.ssh/deploy_ci.pub >> ~/.ssh/authorized_keys      # 公钥授权
@@ -113,7 +116,7 @@ git tag 1.0.1
 git push origin 1.0.1
 ```
 
-CI 自动完成：构建推镜像到 ACR → SSH 登录服务器执行 `git fetch/reset + docker compose up -d --wait`（自动拉新镜像并重建容器，数据卷不受影响），`compose.prod.yml` 无需任何修改。GitHub Secrets 需配置 `ACR_USERNAME` / `ACR_PASSWORD`（ACR 推送凭据）与 `DEPLOY_HOST` / `DEPLOY_USER` / `DEPLOY_SSH_KEY`（服务器 SSH 信息）。
+CI 自动完成：构建推镜像到 ACR → SSH 登录服务器执行 `docker compose up -d --wait`（自动拉新镜像并重建容器，数据卷不受影响），`compose.prod.yml` 无需任何修改也是因为版本号由 git tag 注入。后续若修改了 `compose.prod.yml`，手动 scp 重新上传一次即可（服务器不依赖 GitHub 网络）。GitHub Secrets 需配置 `ACR_USERNAME` / `ACR_PASSWORD`（ACR 推送凭据）与 `DEPLOY_HOST` / `DEPLOY_USER` / `DEPLOY_SSH_KEY`（服务器 SSH 信息）。
 
 ## 三、已实现功能
 
