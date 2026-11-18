@@ -81,5 +81,18 @@ jobs:
           script_stop: true
           script: |
             cd /opt/resume-craft
+            pwd && ls -l compose.prod.yml
+            IMAGE_TAG="$IMAGE_TAG" docker compose -f compose.prod.yml config | grep 'image:'
             IMAGE_TAG="$IMAGE_TAG" docker compose -f compose.prod.yml up -d --wait
             docker compose -f compose.prod.yml ps
+            # 云盘空间有限：每个仓库仅保留当前版本与上一个版本镜像，更旧的删除
+            for repo in backend frontend; do
+              docker images --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' \
+                | grep "^registry.cn-hangzhou.aliyuncs.com/node_caowj/$repo:" \
+                | grep -v ":$IMAGE_TAG " \
+                | sort -k2,3 -r \
+                | awk 'NR>1 {print $1}' \
+                | xargs -r docker rmi 2>/dev/null || true
+            done
+            docker image prune -f >/dev/null 2>&1 || true
+            docker images --format '{{.Repository}}:{{.Tag}}' | grep node_caowj | sort
