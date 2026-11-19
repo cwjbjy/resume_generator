@@ -4,6 +4,7 @@
   background: #fbfcfe;
   font-size: 14px;
   font-synthesis: none;
+  --font-size-min: 11px;
   --blue: #3568d4;
   --ink: #202e46;
   --muted: #8490a2;
@@ -15,7 +16,6 @@
 }
 body {
   margin: 0;
-  min-width: 360px;
 }
 button,
 input,
@@ -175,7 +175,7 @@ svg {
   font-size: 13px;
 }
 .eyebrow {
-  font-size: 10px;
+  font-size: var(--font-size-min);
   font-weight: 650;
   letter-spacing: 1.8px;
   color: #5274ab;
@@ -192,7 +192,6 @@ svg {
 }
 .eyebrow.muted {
   color: #929eb0;
-  font-size: 9px;
   letter-spacing: 2.2px;
 }
 .modal {

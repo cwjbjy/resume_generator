@@ -53,12 +53,13 @@
 }
 .auth-success small {
   display: block;
-  font-size: 9px;
+  font-size: var(--font-size-min);
   color: #a2afbf;
   margin-top: 6px;
 }
 .auth-form-wrap {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   padding: 45px;
 }
@@ -103,6 +104,6 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-size: 10px;
+  font-size: var(--font-size-min);
   color: #b0b9c6;
 }

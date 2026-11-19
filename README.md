@@ -123,4 +123,5 @@ cn.resumecraft
 
 - `features/<业务>/api` 存放业务接口，`lib/http.ts` 封装共享 HTTP 客户端。
 - `features/resumes` 集中简历接口、数据模型、HTML 预览组件和 PDF 生成与预览。
+- 前端样式的最小字号为 11px，小字号统一引用 `--font-size-min`。简历缩略图和预览可按比例缩放。
 - `app` 存放应用入口及运行配置接口，`components/ui`、`components/layout` 存放共享 UI 和布局。

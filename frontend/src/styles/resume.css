@@ -29,7 +29,7 @@
   margin: 4px 0 10px;
 }
 .resume-contact {
-  font-size: 9px;
+  font-size: var(--font-size-min);
   color: #798294;
   word-break: break-word;
 }
@@ -60,7 +60,7 @@
   letter-spacing: 1px;
 }
 .resume-description {
-  font-size: 10px;
+  font-size: var(--font-size-min);
   line-height: 1.85;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -77,12 +77,12 @@
   font-size: 11px;
 }
 .resume-entry-heading > span {
-  font-size: 8px;
+  font-size: var(--font-size-min);
   color: #8d96a6;
   white-space: nowrap;
 }
 .resume-subtitle {
-  font-size: 9px;
+  font-size: var(--font-size-min);
   color: #788293;
   margin: 3px 0;
 }
@@ -92,7 +92,7 @@
   list-style: disc;
 }
 .resume-entry li {
-  font-size: 9.5px;
+  font-size: var(--font-size-min);
   line-height: 1.85;
   padding-left: 2px;
 }
@@ -102,14 +102,14 @@
   flex-wrap: wrap;
 }
 .resume-skills span {
-  font-size: 9px;
+  font-size: var(--font-size-min);
   padding: 2px 9px;
   background: #f0f3f8;
   border-radius: 2px;
 }
 .resume-watermark {
   text-align: center;
-  font-size: 8px;
+  font-size: var(--font-size-min);
   color: #c3c8d1;
   padding-top: 14px;
   letter-spacing: 1px;

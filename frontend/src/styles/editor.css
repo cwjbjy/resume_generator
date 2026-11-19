@@ -41,7 +41,7 @@
   border-color: #e2e8f1;
 }
 .save-status {
-  font-size: 9px;
+  font-size: var(--font-size-min);
   color: #99a9bd;
   display: flex;
   align-items: center;
@@ -80,7 +80,7 @@
   align-items: center;
   flex-direction: column;
   gap: 8px;
-  font-size: 10px;
+  font-size: var(--font-size-min);
   color: #9aa8bc;
   border-radius: 7px;
 }
@@ -94,7 +94,7 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  font-size: 9px;
+  font-size: var(--font-size-min);
   color: #b2a18b;
   margin-top: auto;
   padding: 15px 0 7px;
@@ -102,7 +102,6 @@
 .editor-vip > span {
   background: #f5efdf;
   color: #b69b66;
-  font-size: 9px;
   padding: 3px 9px;
   border-radius: 4px;
   letter-spacing: 1px;
@@ -117,16 +116,13 @@
 .editor-form-title {
   padding: 25px 26px 0;
 }
-.editor-form-title .eyebrow {
-  font-size: 8px;
-}
 .editor-form-title h2 {
   font-size: 21px;
   font-weight: 550;
   margin: 12px 0;
 }
 .editor-form-title p {
-  font-size: 10px;
+  font-size: var(--font-size-min);
   color: #a0adbf;
   line-height: 1.7;
 }
@@ -135,20 +131,19 @@
   flex: 1;
 }
 .editor-fields label {
-  font-size: 10px;
+  font-size: var(--font-size-min);
   margin-bottom: 20px;
   gap: 8px;
   color: #73829a;
 }
 .editor-fields input,
 .editor-fields textarea {
-  font-size: 11px;
+  font-size: var(--font-size-min);
   border-radius: 5px;
   padding: 10px 11px;
   border-color: #e1e6ee;
 }
 .editor-fields input[type='month'] {
-  font-size: 10px;
   padding: 9px 4px;
 }
 .field-grid {
@@ -165,7 +160,7 @@
   border-radius: 6px;
   display: flex;
   gap: 10px;
-  font-size: 10px;
+  font-size: var(--font-size-min);
   color: #95a4ba;
   line-height: 1.9;
   align-items: flex-start;
@@ -181,7 +176,7 @@
   justify-content: center;
   align-items: center;
   gap: 6px;
-  font-size: 9px;
+  font-size: var(--font-size-min);
   color: #b3bfce;
   padding: 17px 12px;
   border-top: 1px solid var(--line);
@@ -210,7 +205,7 @@
   display: flex;
   gap: 5px;
   align-items: center;
-  font-size: 10px;
+  font-size: var(--font-size-min);
   font-weight: 600;
   color: #92a2b7;
 }
@@ -221,14 +216,10 @@
   padding: 4px;
 }
 .entry-card label {
-  font-size: 10px;
   margin-bottom: 17px;
 }
 .entry-card .field-grid {
   gap: 0 8px;
-}
-.entry-card textarea {
-  font-size: 10px;
 }
 .add-entry {
   border: 1px dashed #bdcce2;
@@ -238,7 +229,7 @@
   font-size: 11px;
 }
 .field-hint {
-  font-size: 9px;
+  font-size: var(--font-size-min);
   color: #a4b0c1;
   line-height: 1.9;
   margin-top: 12px;
@@ -266,7 +257,7 @@
   background: #edf3fd;
   border-radius: 4px;
   padding: 7px 9px;
-  font-size: 10px;
+  font-size: var(--font-size-min);
 }
 .skill-tags button {
   padding: 0;
@@ -291,7 +282,7 @@
   justify-content: space-between;
   padding: 0 23px;
   color: #7f92ac;
-  font-size: 10px;
+  font-size: var(--font-size-min);
   flex-shrink: 0;
 }
 .preview-toolbar > div {
@@ -308,7 +299,6 @@
 }
 .preview-template {
   color: #abb5c5;
-  font-size: 9px;
 }
 .zoom-controls > button {
   background: none;
@@ -318,8 +308,8 @@
   display: flex;
 }
 .zoom-controls > span {
-  font-size: 9px;
-  min-width: 28px;
+  min-width: 4ch;
+  font-variant-numeric: tabular-nums;
   text-align: center;
 }
 .zoom-controls > .zoom-separator {
@@ -343,6 +333,6 @@
 }
 .preview-footnote {
   color: #a5b1c2;
-  font-size: 9px;
+  font-size: var(--font-size-min);
   margin: 21px auto 0;
 }
